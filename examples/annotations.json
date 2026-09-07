@@ -1,0 +1,27 @@
+{
+  "title": "竹窗評讀",
+  "volume": "卷一",
+  "profile": {
+    "width": 900, "height": 850, "margin_x": 48, "margin_top": 170, "margin_bottom": 50,
+    "panels": 1, "spine": 0, "columns": 10, "rows": 20, "font_size": 26,
+    "rules": false, "border": "none", "fish_tail": false, "punctuation": "hide", "paper": "#ffffff"
+  },
+  "blocks": [
+    {"kind": "heading", "text": "評讀第一", "indent": 1},
+    {"inlines": [
+      {"text": "山窗初霽竹影滿庭"},
+      {"kind": "ruby", "text": "展卷", "annotation": "開卷讀書"},
+      {"text": "而讀古人之言不獨求其辭亦當明其意"},
+      {"text": "讀書之法循文察理因事會心既明其義復驗於日用"},
+      {"kind": "note", "text": "此為雙行夾注先讀右列再讀左列"},
+      {"text": "故學有本末事有終始知所先後則近道矣"}
+    ]},
+    {"kind": "commentary", "inlines": [
+      {"text": "課注讀書先通文義再辨層次旁批提示關鍵夾注補明字義課注隨段說明全章旨趣"}
+    ]}
+  ],
+  "annotations": [
+    {"text": "讀書貴在會心勿徒記誦", "block": 1, "inline": 0, "placement": "top", "columns": 2, "extent": 6},
+    {"text": "此句承前啟後由讀書轉入躬行", "block": 1, "inline": 3, "offset": 0, "placement": "side", "extent": 15}
+  ]
+}

@@ -1,0 +1,206 @@
+# Bamboo 竹簡
+
+Bamboo 是一个古籍编辑与排版引擎，带有可直接操作的编辑界面。用户从空白文档开始，在纸面上输入、拖选文字、设置夹注或课注，编辑后立即重排。PDF、HTML、DOCX 是导出格式，不是编辑入口。
+
+**0.4.0 从无装饰的空白文档开始，不需要编写源文件。** 内核维护文档、光标、选区、编辑事务、注释关联和撤销历史。界面、导入器和导出器调用这套状态模型。
+
+![Bamboo 纸面编辑与关联编号注释](docs/assets/editor.png)
+
+## 可选元素，不是固定模板
+
+- 鱼尾、版心区域、版心边线、书名、卷次、页码、界栏、外框可以独立开关；“版面元素 → 全部关闭”得到纯文字版面。
+- 横竖方向切换保留纸张、字号及元素选择，不会重新套用模板。
+- 编号注释自动生成正文引用和随段注文，插入、删除后重新编号；点击引用可编辑或移除整条注释。
+- “集解”“索隐”等注家标签的文字和边框分别可编辑。
+- 内置 6 种自绘矢量鱼尾，每种支持上、下、左、右方向。默认不显示，也不依赖字体私用区码位。
+
+![可选矢量鱼尾符号库](docs/assets/symbols.png)
+
+## 安装与使用
+
+需要 Python 3.9 或更新版本：
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[test]'
+
+bamboo edit
+```
+
+也可以直接执行 `bamboo` 或 `python -m bamboo edit`。启动后打开本地编辑界面，默认地址为 `http://127.0.0.1:8765`。
+
+## 在界面中使用
+
+1. 点击“新建”，直接点击纸面输入文字。支持中文输入法、回车分段、删除、粘贴和跨段选区。
+2. 拖选文字，设置朱色强调、双行夹注或短旁注；通过段落样式选择题名或随段课注。
+3. 在右侧调整版式、字号、字格与标点；可以切换横排和竖排。
+4. 使用撤销、重做，或 `Ctrl/⌘ Z`。文档自动保存在本机，刷新后恢复。
+5. “打开”支持普通 UTF-8 文本、Word 文档和编辑器保存的副本；“导出”支持 PDF、HTML、原生 Word。
+
+工具栏的“编号注释”“带框标签”“版面元素”“符号库”提供对应编辑入口。预设只是可选起点，调整参数后会显示为自定义版面。
+
+“保存副本”下载可恢复的编辑状态 JSON。它只是文件载体，用户无需手写或理解其中的结构。
+
+```sh
+# 不自动打开浏览器，指定端口与本地文档目录
+bamboo edit --no-browser --port 8765 --workspace output/editor
+```
+
+服务仅监听本机回环地址，不是公网或多人协作服务。文档默认保存在 `output/editor/documents`。停止服务后可以用同样的目录重新启动；撤销历史保留在当前服务会话中，文档内容和光标位置保存到磁盘。
+
+## 不依赖界面的编辑 API
+
+```python
+from bamboo import EditorSession, Position
+
+editor = EditorSession()  # 真正的空白文档，不读取源文件
+editor.dispatch({"type": "insert_text", "text": "山窗日暖\n竹影入簾"})
+editor.select(Position(editor.block_ids[0], 0), Position(editor.block_ids[0], 4))
+editor.dispatch({"type": "format_range", "kind": "note"})
+editor.dispatch({"type": "undo"})
+
+layout = editor.layout()                 # 当前文档的布局
+position = editor.hit_test(0, 410, 80)    # 纸面坐标 -> 文档位置
+caret = editor.caret(position)           # 文档位置 -> 光标几何
+```
+
+一次 `dispatch([...])` 是原子事务，只产生一个撤销步骤。可传入 `expected_revision` 防止旧界面覆盖新编辑。文本插入、删除、分段或合并时会更新独立批注的锚点；删除锚点与所附批注可以整体撤销。排版冲突不会丢弃输入，而是返回诊断。
+
+## 批处理与开发工具
+
+原来的文本语法和 `render` 命令仍可用于自动化、样例与测试，**不是普通用户编辑文档的必要步骤**。已有依赖环境时，可在项目根目录执行 `python -m bamboo render`。一次导出生成 PDF、HTML、DOCX、布局 JSON 和 manifest。
+
+```sh
+# 横排正文、双行夹注与随段课注
+bamboo render examples/horizontal.bamboo -o output/horizontal --name horizontal
+
+# 朱色短旁注、长旁批、眉批和课注
+bamboo render examples/annotations.json -o output/annotations --name annotations
+
+# 单面朱丝栏
+bamboo render examples/custom.json -o output/custom --name custom
+
+# 编号引用与注家标签
+bamboo render examples/numbered.json -o output/numbered --name numbered
+
+# 只导出原生 Word
+bamboo render examples/daodejing.bamboo --formats docx --docx-mode flow -o output/word
+
+# 可选整页图片模式，不支持正文重排
+bamboo render examples/daodejing.bamboo --formats docx --docx-mode facsimile --dpi 300 -o output/facsimile
+
+bamboo presets
+bamboo layout examples/custom.json > custom.layout.json
+python -m pytest -q
+```
+
+## 格式与一致性
+
+Word 默认导出可编辑、可重排的原生文字，横排保持横排，竖排保持竖排。可选图片模式仅用于明确需要整页图像的场景。
+
+| 能力 | PDF / HTML | DOCX 默认流式模式 |
+| --- | --- | --- |
+| 横排与竖排 | 共用确定的字位布局 | 原生横排或竖排，保留纸张尺寸 |
+| 正文、题名与缩进 | 矢量字或 SVG 文字 | 原生段落、标题样式、字距与行距 |
+| 双行夹注 | 双行小字，支持跨栏跨叶 | 原生双行合一，随正文重排 |
+| 课注 | 随段独立小字号注文 | 独立课注样式，与前段保持关联 |
+| 短旁注 | 正文旁的独立小字 | 原生 ruby，与锚定文字一同流动 |
+| 编号引用与注文 | 引用与注文绑定、自动重编号 | 原生中文编号列表＋书签＋REF 域回链 |
+| 注家标签 | 可编辑文字、可选方框 | 原生文字样式与字符边框 |
+| 长旁批、眉批 | 独立区域、源锚点、局部避碰与越界校验 | 可编辑文字框，跟随段落或所在页面 |
+| 脚注 | 当前以随文双行小注表达 | 原生页下注、自动编号和脚注关系 |
+| 版框、界栏、版心、鱼尾 | 矢量装饰 | 独立页眉装饰图层，正文仍然是文字 |
+| 叶码 | 排版时计算 | 原生 PAGE 字段，随重排更新 |
+
+PDF 与 HTML 共用固定布局。DOCX 使用相同的方向、纸张、字体、字号和网格目标，但最终换行与分页由阅读器计算，不能保证任意修改后与 PDF 逐字同位。双面竖排的版心通过页眉环绕对象留出；Word 行框环绕需要小幅行距容差，详见架构说明。
+
+**长批注的边界：** 短旁注原生随字移动；长旁批使用段落相对定位文字框。增删前面的段落时可以跟随所在段落移动；在锚定段落内部大量改字之后，需要重新从源文导出以更新精确位置。文字框不能自动跨页续框，导出警告会明确说明。
+
+## 批处理辅助格式（可选）
+
+```text
+@title 竹窗讀書記
+@volume 卷一
+@preset single
+
+# 讀書小記
+
+　　山窗日暖，竹影入簾。[[小字雙行，隨文排入。]]展卷讀書，{{心與古人相接。}}
+
+> 課注：本段先寫景，再說讀書的感受。課注跟隨前段，使用小字表達。
+
+後文仍然保持竪排((此處為 Word 原生腳注的示例。))。
+
+---
+
+此處明確另起一頁。
+```
+
+- 元数据在正文之前。模板有 `woodblock`、`red-ruled`、`single`、`horizontal`。
+- `@writing-mode vertical-rl` 或 `horizontal-tb` 明确方向。只指定横排方向而未指定模板时，采用横排模板。
+- `# ` 至 `######### ` 表示分级题名；空行结束段落，普通换行仅用于编辑源文件。
+- 段首全角空格表示字格缩进。`[[…]]` 是夹注，`{{…}}` 是重点文字，`((…))` 是脚注。
+- `> ` 是随段课注，连续 `>` 可记录课注层级。
+- 单独一行 `---` 是分页。首尾或连续分页符不生成空白页。
+- 使用反斜线转义标记，不支持嵌套行内标记。
+
+短旁注和独立批注使用 JSON：
+
+```json
+{
+  "title": "評讀小記",
+  "preset": "single",
+  "blocks": [{"inlines": [
+    {"text": "學而時習之", "kind": "ruby", "annotation": "溫故知新"},
+    {"text": "讀書須知先後"}
+  ]}]
+}
+```
+
+完整配置见 [朱批示例](examples/annotations.json)。长批注通过 `block`、`inline`、`offset` 锚定源文字，指定 `placement`、`columns`、`extent`，不写死全局页码。空间不足时明确报错，不裁掉注文。
+
+## 底层布局与导出 API
+
+```python
+from bamboo import Book, Block, Inline, PRESETS, compose, render
+
+book = Book(
+    title="竹窗讀書記",
+    blocks=(
+        Block((Inline("讀書小記"),), kind="heading", indent=1),
+        Block((Inline("山窗日暖，"), Inline("小字雙行。", kind="note"), Inline("竹影入簾。"))),
+        Block((Inline("課注：此段從景物引入讀書之樂。"),), kind="commentary"),
+    ),
+    profile=PRESETS["single"],
+)
+layout = compose(book)
+result = render(book, "output", basename="bamboo")
+print(result.pages, result.files)
+```
+
+还提供 `parse(text)`、`load(path)`、`from_dict(data)` 和 `Annotation` 模型。模型不可变，坐标为 pt，原点在左上角。`columns` 表示每个排版面的行／栏数，`rows` 表示每行／栏的主字格数，按横竖方向对应的写作轴解释。
+
+## 字体与诊断
+
+```sh
+bamboo render examples/daodejing.bamboo --font /path/to/font.otf
+bamboo render examples/daodejing.bamboo --font /path/to/fonts.ttc --font-index 0
+```
+
+也可设置 `BAMBOO_FONT`。未指定时探测本机宋体、Noto Serif CJK、文鼎明体，最后使用内置 CJK 字体。字体不放入源码；PDF、HTML 和 Word 流式文档嵌入所用字形。在 Word 中新增子集以外的字，仍需本机字体支持。
+
+缺字、无效参数、批注超容量、文字越界和不允许的字体嵌入会返回明确错误。禁止子集化的字体保留完整数据；仅允许预览打印嵌入的字体不能用于可编辑 Word。
+
+manifest 的 `pages` 指固定布局页数，DOCX 实际页数以阅读器渲染为准。`warnings` 记录跨格式差异。Word 包内 `customXml/bamboo-source.xml` 保存原始语义快照；在 Word 直接改字不会自动回写这个快照。
+
+## 设计与验证
+
+- [编辑内核与界面](docs/editor.md)：编辑状态、事务、光标、锚点、输入法和保存恢复。
+- [架构](docs/architecture.md)：语义、主文字流、注释区域与导出。
+- [特殊版式能力](docs/typography.md)：各种注释的表达方式与当前边界。
+- [验证记录](docs/validation.md)：实际渲染、方向保持和增删重排测试。
+
+当前布局按版本缓存并报告变化页面，尚不是完整的增量分页算法；长文性能、复杂对象操作、多用户协作和任意 Word 文件的高保真导入还需完善。Word 导入以实际正文为准，支持常规段落、题名、双行夹注、短旁注和脚注；复杂表格只保留行文字，浮动批注文字转为课注，界面会提示差异。
+
+尚未实现完整多语种 shaping、全部中文标点禁则、印章、自动抬头包边、复杂表格、族谱连线、工尺谱和印刷折手。样例使用独立测试正文与公开古文节选，不作为校勘底本。

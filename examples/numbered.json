@@ -1,0 +1,15 @@
+{
+  "title": "讀書評注",
+  "volume": "卷一",
+  "preset": "blank",
+  "blocks": [
+    {"kind": "heading", "text": "讀書第一", "indent": 1},
+    {"inlines": [
+      {"text": "讀書先通其文，次明其義。"},
+      {"kind": "numbered_note", "target": "meaning", "text": "此處說明由文字入義理的次序。", "annotation": "集解"},
+      {"text": "熟讀而善思，所學始有根基。"},
+      {"kind": "numbered_note", "target": "practice", "text": "讀與思相互發明，亦當驗之於行。", "annotation": "索隱"}
+    ]},
+    {"kind": "commentary", "text": "課注：正文引用與注文相連，增刪注文後編號自動更新。"}
+  ]
+}

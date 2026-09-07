@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="bamboo-token" content="__BAMBOO_TOKEN__">
+  <title>Bamboo · 古籍编辑</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 28V5m10 23V4M8 11h6m4-1h6M8 21h6m4-1h6M11 8C5 7 4 4 3 3m18 13c5-1 7-4 8-6"/></svg><span>BAMBOO<small>古籍编辑</small></span></div>
+  <div class="title-wrap"><input id="title" aria-label="文档名称" value="未命名文档"><span id="save-status">正在打开…</span></div>
+  <div class="file-actions"><button id="new">新建</button><button id="open">打开</button><button id="save">保存副本</button><button id="export" class="primary">导出 <span>↗</span></button></div>
+</header>
+<nav class="toolbar" aria-label="编辑工具">
+  <div class="tool-group"><button id="undo" title="撤销 ⌘Z" aria-label="撤销">↶</button><button id="redo" title="重做 ⇧⌘Z" aria-label="重做">↷</button></div>
+  <div class="tool-group"><select id="block-kind" aria-label="段落样式"><option value="paragraph">正文</option><option value="heading">题名</option><option value="commentary">课注</option></select><button id="emphasis">朱色强调</button><button id="plain">清除格式</button><button id="label">带框标签</button></div>
+  <div class="tool-group"><button id="note">双行夹注</button><button id="numbered-note">编号注释</button><button id="ruby">短旁注</button><button id="footnote">脚注</button><button id="annotation">旁批 / 眉批</button></div>
+  <div class="tool-group"><button id="appearance">版面元素</button><button id="symbols">符号库</button></div>
+  <div class="tool-group direction"><button id="vertical" class="active">竖排</button><button id="horizontal">横排</button></div>
+  <div class="tool-group"><label class="zoom-label">缩放 <select id="zoom" aria-label="页面缩放"><option value="fit">适合窗口</option><option value="1">100%</option><option value="0.8">80%</option><option value="1.5">150%</option></select></label></div>
+</nav>
+<div class="workspace">
+  <aside class="library"><div class="section-label">我的文档 <span>本地</span></div><div id="documents"></div><div class="library-bottom"><span class="dot"></span> 文件保存在这台电脑</div></aside>
+  <main id="viewport"><div id="issues" role="status" hidden></div><div id="paper-heading"><span id="page-count">1 页</span><span>直接点击纸面开始编辑</span></div><div id="canvas" aria-label="文档页面"></div><textarea id="input" aria-label="文档输入" autocomplete="off" autocorrect="off" spellcheck="false"></textarea><div id="recovery" hidden><strong>这次输入未提交，请保留后重试</strong><textarea aria-label="未提交的文字"></textarea></div></main>
+  <aside class="inspector"><div class="section-label">版式</div><label>应用预设<select id="preset"><option value="custom" disabled>自定义版面</option><option value="blank">空白版面</option><option value="single">单面竖排</option><option value="woodblock">双面古籍</option><option value="red-ruled">朱丝栏</option><option value="horizontal">横排书页</option></select></label><div class="two-fields"><label>字号<input id="font-size" type="number" min="4" max="80" step="0.5"></label><label id="rows-label">每栏字数<input id="rows" type="number" min="2" max="100"></label></div><label id="columns-label">每面栏数<input id="columns" type="number" min="1" max="100"></label><label>标点方式<select id="punctuation"><option value="keep">保留标点</option><option value="judou">传统句读</option><option value="hide">白文</option></select></label><label>段首空格<input id="indent" type="number" min="0" max="20"></label><div class="divider"></div><button id="appearance-side" class="element-button">设置版面元素</button><p>鱼尾、版心、边框等均可独立关闭。</p><div class="divider"></div><div class="section-label">选区与注释</div><p id="selection-info">点击文字定位光标，拖动选择文字。</p><div id="annotation-list"></div><div class="tips"><strong>直接编辑</strong><p>输入文字、回车分段，选中文字后设置夹注或旁注。</p><p>支持中文输入法、粘贴、撤销和重做。</p></div></aside>
+</div>
+<footer><span id="word-count">0 字</span><span id="mode-label">竖排 · 可编辑</span><span id="feedback" role="status">空白文档已就绪</span></footer>
+<input type="file" id="file" accept=".docx,.txt,.json" hidden>
+<dialog id="modal"><form id="modal-form"><h2 id="modal-title"></h2><p id="modal-description"></p><div id="modal-fields"></div><div class="dialog-actions"><button type="button" id="cancel">取消</button><button type="submit" class="primary">确定</button></div></form></dialog>
+<script src="/assets/app.js"></script>
+</body></html>

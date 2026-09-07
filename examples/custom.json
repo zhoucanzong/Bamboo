@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "title": "竹窗讀書記",
+  "volume": "卷一",
+  "preset": "single",
+  "profile": {"rule_color": "#aa4539", "punctuation": "keep"},
+  "blocks": [
+    {"kind": "heading", "text": "讀書小記", "indent": 1},
+    {"kind": "paragraph", "indent": 2, "inlines": [
+      {"text": "山窗日暖，竹影入簾。"},
+      {"kind": "note", "text": "小字雙行，隨文排入。"},
+      {"text": "展卷讀書，心與古人相接。"},
+      {"kind": "emphasis", "text": "讀而能思，思而能行。"}
+    ]}
+  ]
+}
