@@ -68,6 +68,13 @@ def import_docx(data):
     except Exception as e:
         raise BambooError(f"无法打开 Word 文档: {e}") from e
 
+    if saved_book and saved_book.special is not None:
+        from .exporters.structured_word import import_structured
+
+        result = import_structured(doc, saved_book)
+        if result is not None:
+            return result
+        warnings.append("专用记录结构已被修改，按实际文字导入，请核对。")
     section = doc.sections[0]
     direction = section._sectPr.find(qn("w:textDirection"))
     vertical = direction is not None and direction.get(qn("w:val")) in {"tbRl", "tbRlV"}
@@ -437,7 +444,7 @@ def import_docx(data):
         for text in floating:
             blocks.append(Block((Inline(text),), "commentary"))
         if floating:
-            warnings.append("浮动批注文字已作为随段课注保留，其原始位置暂未恢复。")
+            warnings.append("浮动批注文字已作为随段段后注保留，其原始位置暂未恢复。")
             floating.clear()
     book = Book(
         doc.core_properties.title or "导入的文档",
@@ -460,7 +467,7 @@ def import_docx(data):
     ]
     if remaining:
         book = replace(book, blocks=book.blocks + tuple(remaining))
-        warnings.append("未能恢复的编号关联已按课注保留文字，请核对引用。")
+        warnings.append("未能恢复的编号关联已按段后注保留文字，请核对引用。")
     return EditorSession(book), list(dict.fromkeys(warnings))
 
 

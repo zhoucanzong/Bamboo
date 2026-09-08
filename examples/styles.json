@@ -1,10 +1,10 @@
 {
-  "title": "竹簡讀書集",
+  "title": "简牍讀書集",
   "blocks": [
     {
       "inlines": [
         {
-          "text": "竹簡讀書集",
+          "text": "简牍讀書集",
           "kind": "text",
           "annotation": "",
           "target": "",
@@ -127,7 +127,7 @@
         },
         "title": null,
         "volume": "序言",
-        "author": "竹簡書屋",
+        "author": "简牍書屋",
         "page_type": "body",
         "cover_border": "double",
         "cover_width": 70,
@@ -171,7 +171,7 @@
     {
       "inlines": [
         {
-          "text": "歲次丙午仲秋　竹簡書屋識",
+          "text": "歲次丙午仲秋　简牍書屋識",
           "kind": "text",
           "annotation": "",
           "target": "",
@@ -188,7 +188,7 @@
     {
       "inlines": [
         {
-          "text": "竹簡書屋",
+          "text": "简牍書屋",
           "kind": "seal",
           "annotation": "",
           "target": "",

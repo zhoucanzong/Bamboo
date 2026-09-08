@@ -44,6 +44,24 @@ def export_html(layout, font, path):
             + "</section>"
         )
     transcript = []
+    if layout.book.special is not None:
+        for page in layout.pages:
+            for widget in page.widgets:
+                if widget["kind"] == "table":
+                    transcript.append("<table>")
+                    for row in range(widget["rows"]):
+                        transcript.append(
+                            "<tr>"
+                            + "".join(
+                                "<td>" + escape(c["text"]) + "</td>"
+                                for c in widget["cells"]
+                                if c["row"] == row
+                            )
+                            + "</tr>"
+                        )
+                    transcript.append("</table>")
+                else:
+                    transcript.append("<p>" + escape(widget["text"]) + "</p>")
     note_index = 0
     for block in layout.book.blocks:
         if block.kind == "pagebreak":
@@ -136,7 +154,7 @@ activate(0,false);
     html = f"""<!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="generator" content="Bamboo"><title>{title} · Bamboo</title><style>{css}</style></head>
-<body><header><div class="toolbar"><span class="brand">BAMBOO / 竹簡</span><h1>{title}</h1>
+<body><header><div class="toolbar"><span class="brand">BAMBOO / 简牍</span><h1>{title}</h1>
 <button id="prev" aria-label="上一葉">{"上一葉 →" if profile.vertical else "← 上一頁"}</button><select id="page" aria-label="选择书叶">{options}</select>
 <button id="next" aria-label="下一葉">{"← 下一葉" if profile.vertical else "下一頁 →"}</button>
 <select id="zoom" aria-label="缩放"><option value="{profile.width}">原始比例</option><option value="fit">适应窗口</option>

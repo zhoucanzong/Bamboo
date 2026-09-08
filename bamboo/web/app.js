@@ -49,6 +49,7 @@ function localHit(page,x,y){
 }
 function paintSelection(){
   if(!state||!selection)return;
+  if(state.book.special){$('input').blur();$('selection-info').textContent='点击纸面记录或专用工具按钮，可打开记录编辑器。';return;}
   document.querySelectorAll('.selection-layer').forEach(n=>n.replaceChildren());
   const collapsed=equal(selection.anchor,selection.focus),[a,b]=ordered();
   if(!collapsed){for(const g of sourceGlyphs()){
@@ -97,11 +98,11 @@ function render(next){
     paper.append(svg('rect',{width:profile.width,height:profile.height,fill:profile.paper}));
     for(const l of page.lines)paper.append(svg('line',{x1:l.x1,y1:l.y1,x2:l.x2,y2:l.y2,stroke:l.color,'stroke-width':l.width}));
     for(const p of page.polygons)paper.append(svg('polygon',{points:p.points.map(p=>p.join(',')).join(' '),fill:p.color}));
-    for(const g of page.glyphs){const t=svg('text',{x:g.baseline_x,y:g.baseline_y,'font-size':g.size,fill:g.color,stroke:g.bold?g.color:'none','stroke-width':g.bold?g.size*.022:0});t.textContent=g.text;if(g.reference_id&&g.block<0){t.dataset.reference=g.reference_id;t.classList.add('reference-link');}paper.append(t);}
+    for(const g of page.glyphs){const t=svg('text',{x:g.baseline_x,y:g.baseline_y,'font-size':g.size,fill:g.color,stroke:g.bold?g.color:'none','stroke-width':g.bold?g.size*.022:0});t.textContent=g.text;if(g.object_id){t.dataset.object=g.object_id;t.dataset.field=g.field;}if(g.reference_id&&g.block<0){t.dataset.reference=g.reference_id;t.classList.add('reference-link');}paper.append(t);}
     if(!state.book.blocks.some(b=>b.inlines.length)&&index===0){const hint=svg('text',{x:profile.width/2,y:profile.height/2,'text-anchor':'middle',class:'empty-hint'});hint.textContent='点击纸面，开始书写';paper.append(hint);}
     paper.append(svg('g',{class:'selection-layer'}));shell.append(paper);canvas.append(shell);
     paper.addEventListener('pointerdown',event=>{
-      if(event.button!==0)return;if(event.target.dataset.reference){event.preventDefault();editNumberedNote(event.target.dataset.reference);return;}event.preventDefault();const r=paper.getBoundingClientRect(),p=localHit(index,(event.clientX-r.left)/scale,(event.clientY-r.top)/scale);
+      if(event.button!==0)return;if(state.book.special){event.preventDefault();openStructured(state.book.special.kind,event.target.dataset.object,event.target.dataset.field);return;}if(event.target.dataset.reference){event.preventDefault();editNumberedNote(event.target.dataset.reference);return;}event.preventDefault();const r=paper.getBoundingClientRect(),p=localHit(index,(event.clientX-r.left)/scale,(event.clientY-r.top)/scale);
       selection=event.shiftKey?{anchor:selection.anchor,focus:p}:{anchor:p,focus:p};dragging=true;paper.setPointerCapture(event.pointerId);paintSelection();$('input').focus({preventScroll:true});
     });
     paper.addEventListener('pointermove',event=>{if(!dragging)return;const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.page');const actual=target?Number(target.dataset.page):index;const element=target?.querySelector('svg')||paper,r=element.getBoundingClientRect();selection.focus=localHit(actual,(event.clientX-r.left)/scale,(event.clientY-r.top)/scale);paintSelection();});
@@ -109,6 +110,9 @@ function render(next){
   });
   $('annotation-list').replaceChildren();state.book.annotations.forEach((note,index)=>{const item=document.createElement('div'),remove=document.createElement('button');remove.textContent='移除';remove.onclick=()=>command({type:'remove_annotation',index});item.append(remove,document.createTextNode((note.placement==='top'?'眉批：':'旁批：')+note.text));$('annotation-list').append(item);});
   (state.view.numbered_notes||[]).forEach((note,index)=>{const item=document.createElement('div'),edit=document.createElement('button');edit.textContent='编辑';edit.onclick=()=>editNumberedNote(note.target);item.append(edit,document.createTextNode(`编号 ${index+1} · ${note.label||'注文'}：${note.text}`));$('annotation-list').append(item);});
+  const special=state.book.special;
+  for(const id of ['block-kind','text-style','emphasis','plain','label','note','numbered-note','ruby','footnote','annotation','preset','rows','columns','indent','styles','chapter','cover','seal','page-templates','page-templates-side','symbols'])$(id).disabled=!!special;
+  if(special){$('word-count').textContent=special.records.length+' 条记录';$('mode-label').textContent=({gift:'礼簿',genealogy:'族谱',gongche:'工尺谱'}[special.kind])+' · 可编辑';$('section-name').textContent='专用文档';}
   $('save-status').textContent='已自动保存';paintSelection();refreshLibrary();
 }
 function syncSelection(){if(!state)return;const current=structuredClone(selection);queue=queue.then(()=>json('/api/select/'+state.document_id,current)).catch(e=>feedback(e.message,true));}
@@ -126,7 +130,7 @@ function command(operation){
     catch(e){feedback(e.message,true);$('save-status').textContent='这次操作未保存';if(op.text){$('recovery').hidden=false;$('recovery').querySelector('textarea').value+=op.text;}if(e.message.includes('文档已更新'))render(await json('/api/document/'+id));}
   }).finally(()=>{pending--;});return queue;
 }
-function insertText(text){if(text)command({type:'insert_text',text,followCaret:pending>0});}
+function insertText(text){if(state.book.special)return;if(text)command({type:'insert_text',text,followCaret:pending>0});}
 function flushInput(){if(composing)return;const value=$('input').value;if(value){$('input').value='';insertText(value);}}
 $('input').addEventListener('compositionstart',()=>{composing=true;});
 $('input').addEventListener('compositionend',()=>{composing=false;queueMicrotask(flushInput);});
@@ -272,7 +276,7 @@ $('cover').onclick=async()=>{
  if(a)await command(existing?{type:'set_section',values:{cover_border:a.border,cover_width:Number(a.width)}}:{type:'insert_cover',title:a.title,subtitle:a.subtitle,border:a.border,width:Number(a.width)});
 };
 $('seal').onclick=async()=>{const a=await modal('文字印章','用可编辑文字排成方印，按竖排自右向左排列。可用于署名落款，最多 16 字。',[
- {name:'text',label:'印文',value:selectedText()||'竹簡書屋'},
+ {name:'text',label:'印文',value:selectedText()||'简牍書屋'},
  {name:'seal_style',label:'印章样式',value:'red',options:[['red','朱文（红字）'],['white','白文（白字红底）']]}]);if(a)await command({type:'insert_inline',kind:'seal',text:a.text,seal_style:a.seal_style});};
 $('page-setup').onclick=async()=>{const p=activeProfile(),a=await modal('纸张与留白','设置当前篇章的纸张大小和页边距。单位为 pt，72 pt 约等于 2.54 cm。',[
 {name:'width',label:'纸张宽度',type:'number',value:p.width},

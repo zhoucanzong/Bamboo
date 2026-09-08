@@ -541,6 +541,10 @@ def _compose_flow(book: Book, display_start=1, note_start=0) -> Layout:
 
 
 def compose(book: Book) -> Layout:
+    if book.special is not None:
+        from .structured_layout import compose_special
+
+        return compose_special(book)
     from .styles import section_ranges
     from .style_layout import compose_cover
 

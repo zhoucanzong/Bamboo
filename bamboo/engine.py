@@ -82,6 +82,10 @@ def render(
             warnings.append(
                 "短旁注原生随字流动；长旁批与眉批使用可编辑锚定框。长旁批跟随段落，段内增删文字后需要重新导出来更新精确位置；文本框不能自动跨页续框。"
             )
+    if book.special is not None and "docx" in formats and docx_mode == "flow":
+        warnings.append(
+            "专用文档保留原生文字与表格；Word 内增删记录后，回导简牍可重新计算金额大写和合计。每页小计按导出时的记录分组，Word 改字重排后可能改变页数。"
+        )
     output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     source_json = json.dumps(

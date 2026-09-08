@@ -136,7 +136,7 @@ def test_cover_optional_and_body_untouched():
     s.dispatch(
         {
             "type": "insert_cover",
-            "title": "竹簡讀書集",
+            "title": "简牍讀書集",
             "subtitle": "一卷",
             "border": "none",
         }
@@ -174,7 +174,7 @@ def test_json_roundtrip_styles_and_sections():
 
 def test_three_exports_native_sections_cover_and_seals(tmp_path):
     s = EditorSession(mixed_book())
-    s.dispatch({"type": "insert_cover", "title": "竹簡讀書集", "subtitle": "一卷"})
+    s.dispatch({"type": "insert_cover", "title": "简牍讀書集", "subtitle": "一卷"})
     result = render(s.book, tmp_path)
     doc = Document(result.files["docx"])
     assert len(doc.sections) == 3
@@ -206,7 +206,7 @@ def test_three_exports_native_sections_cover_and_seals(tmp_path):
         for name in original.namelist():
             data = original.read(name)
             if name == "word/document.xml":
-                data = data.replace("竹簡讀書集".encode(), "新編讀書集".encode())
+                data = data.replace("简牍讀書集".encode(), "新編讀書集".encode())
             changed.writestr(name, data)
     changed, _ = import_docx(raw.getvalue())
     assert changed.book.blocks[0].text == "新編讀書集"

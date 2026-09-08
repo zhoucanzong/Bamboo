@@ -444,8 +444,16 @@ class Book:
     profile: Profile = field(default_factory=Profile)
     annotations: Tuple[Annotation, ...] = ()
     styles: Tuple[TextStyle, ...] = ()
+    special: Any = None
 
     def __post_init__(self):
+        from .structured import validate
+
+        validate(self.special)
+        if self.special is not None and (
+            len(self.blocks) != 1 or self.blocks[0].inlines or self.annotations
+        ):
+            raise BambooError("专用文档通过记录编辑，不能混入正文段落或独立批注")
         for key in ("title", "volume", "author"):
             value = getattr(self, key)
             if not isinstance(value, str) or any(ord(c) < 32 for c in value):
@@ -512,6 +520,8 @@ class Glyph:
     annotation_id: str = ""
     reference_id: str = ""
     bold: bool = False
+    object_id: str = ""
+    field: str = ""
 
 
 @dataclass(frozen=True)
@@ -555,6 +565,7 @@ class Page:
     profile: Profile | None = None
     section_index: int = 0
     folio: int = 1
+    widgets: Tuple[dict, ...] = ()
 
 
 @dataclass(frozen=True)

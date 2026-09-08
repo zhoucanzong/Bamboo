@@ -10,6 +10,6 @@
       {"text": "熟讀而善思，所學始有根基。"},
       {"kind": "numbered_note", "target": "practice", "text": "讀與思相互發明，亦當驗之於行。", "annotation": "索隱"}
     ]},
-    {"kind": "commentary", "text": "課注：正文引用與注文相連，增刪注文後編號自動更新。"}
+    {"kind": "commentary", "text": "段后注：正文引用與注文相連，增刪注文後編號自動更新。"}
   ]
 }

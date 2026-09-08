@@ -274,7 +274,7 @@ def test_styles_cover_chapters_and_seals_in_ui(editor):
     expect(page.locator("#word-count")).to_have_text("13 字")
     assert current(app).book.blocks[0].inlines[-1].kind == "seal"
     page.locator("#cover").click()
-    page.locator("#modal-title").fill("竹簡讀書集")
+    page.locator("#modal-title").fill("简牍讀書集")
     page.locator("#modal-form button[type=submit]").click()
     expect(page.locator("#page-count")).to_have_text("2 页")
     expect(page.locator("#issues")).not_to_be_visible()
@@ -367,3 +367,43 @@ def test_page_style_gallery_new_chapter_scope(editor):
     assert current(app).book.blocks[0].section is None
     assert current(app).book.profile == original
     assert not current(app).book.blocks[1].section.profile.vertical
+
+
+def test_gift_editor_add_calculate_edit_undo_and_export(editor):
+    page, app, folder, expect, url = editor
+    page.locator("#gift-book").click()
+    expect(page.locator("#structured-dialog")).to_be_visible()
+    page.locator("#structured-title").fill("婚庆礼簿")
+    for name, amount in [("张三", "1000.50"), ("李四", "600")]:
+        page.locator("#structured-add").click()
+        row = page.locator("#structured-records tbody tr").last
+        row.locator("[data-field=name]").fill(name)
+        row.locator("[data-field=amount]").fill(amount)
+    expect(page.locator("#structured-summary")).to_contain_text("1600.50")
+    page.locator("#structured-save").click()
+    expect(page.locator("#structured-dialog")).not_to_be_visible()
+    expect(page.locator("#word-count")).to_have_text("2 条记录")
+    assert current(app).book.special.records[0].name == "张三"
+    page.locator(".page text[data-object]").first.click()
+    expect(page.locator("#structured-dialog")).to_be_visible()
+    page.locator("#structured-direction").select_option("vertical-rl")
+    page.locator("#structured-records tbody tr").first.locator(
+        "[data-field=amount]"
+    ).fill("1200")
+    page.locator("#structured-save").click()
+    expect(page.locator("#structured-dialog")).not_to_be_visible()
+    assert current(app).book.profile.vertical
+    page.locator("#undo").click()
+    expect(page.locator("#word-count")).to_have_text("2 条记录")
+    assert not current(app).book.profile.vertical
+    page.reload()
+    expect(page.locator("#word-count")).to_have_text("2 条记录")
+    page.locator("#gift-book").click()
+    page.screenshot(path=str(folder / "gift-editor.png"))
+    page.locator("#structured-cancel").click()
+    for fmt in ["pdf", "html", "docx"]:
+        page.locator("#export").click()
+        page.locator("#modal-format").select_option(fmt)
+        with page.expect_download() as download:
+            page.locator("#modal-form button[type=submit]").click()
+        assert download.value.failure() is None

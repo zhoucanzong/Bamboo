@@ -269,6 +269,11 @@ def export_docx(layout, font, path, mode="flow", dpi=180):
                     page.rect.height,
                     f"{layout.book.title} 第 {i+1} 葉，古籍保真版",
                 )
+    elif mode in {"flow", "editable"} and layout.book.special is not None:
+        from .structured_word import write_structured
+
+        write_structured(doc, layout, font)
+        _embed_font(doc, font)
     elif mode in {"flow", "editable"}:
         from .wordflow import write_flow
 

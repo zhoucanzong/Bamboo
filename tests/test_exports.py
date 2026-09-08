@@ -24,7 +24,7 @@ NS = {
 
 @pytest.fixture(scope="module")
 def exported(tmp_path_factory):
-    b = parse("@title 竹簡\n# 題名\n\n甲乙[[天地玄黃]]{{宇宙}}。\n\n---\n日月盈昃。")
+    b = parse("@title 简牍\n# 題名\n\n甲乙[[天地玄黃]]{{宇宙}}。\n\n---\n日月盈昃。")
     out = tmp_path_factory.mktemp("exports")
     return b, render(b, out, basename="sample", dpi=72, docx_mode="facsimile")
 

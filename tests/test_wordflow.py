@@ -56,14 +56,14 @@ def test_default_docx_is_direction_preserving_continuous_text(
 
 
 def test_commentary_is_a_following_native_paragraph(tmp_path):
-    b = parse("@title 課注\n正文講述一件事。\n\n> 課注說明其義。\n\n後文仍可續排。")
+    b = parse("@title 段后注\n正文講述一件事。\n\n> 段后注說明其義。\n\n後文仍可續排。")
     root = xml(render(b, tmp_path, formats=["docx"]))
     paras = root.xpath("//w:body/w:p", namespaces=NS)
     assert paras[0].find("w:pPr/w:keepNext", NS) is not None
     assert paras[1].xpath("w:pPr/w:pStyle/@w:val", namespaces=NS) == [
         "BambooCommentary"
     ]
-    assert "課注說明其義" in "".join(paras[1].xpath(".//w:t/text()", namespaces=NS))
+    assert "段后注說明其義" in "".join(paras[1].xpath(".//w:t/text()", namespaces=NS))
 
 
 def test_footnotes_are_native_relationships_and_references(tmp_path):
@@ -191,7 +191,7 @@ def test_annotation_anchor_cannot_be_another_note():
 
 
 def test_new_markup_keeps_footnotes_and_commentary_separate():
-    b = parse("@writing-mode horizontal-tb\n## 分節\n正文((脚注))\n\n>> 課注")
+    b = parse("@writing-mode horizontal-tb\n## 分節\n正文((脚注))\n\n>> 段后注")
     assert b.profile.writing_mode == "horizontal-tb"
     assert b.blocks[0].level == 2
     assert b.blocks[1].inlines[1].kind == "footnote"

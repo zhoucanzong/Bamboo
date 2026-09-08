@@ -28,6 +28,9 @@ def _keys(obj, allowed, context):
         raise BambooError(f"{context} 含未知字段: {', '.join(sorted(unknown))}")
 
 
+from .structured import from_dict as special_from_dict
+
+
 def from_dict(data):
     _keys(
         data,
@@ -41,6 +44,7 @@ def from_dict(data):
             "blocks",
             "annotations",
             "styles",
+            "special",
         },
         "文档",
     )
@@ -129,6 +133,7 @@ def from_dict(data):
         profile,
         tuple(notes),
         tuple(styles),
+        special_from_dict(data["special"]) if data.get("special") is not None else None,
     )
 
 

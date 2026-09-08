@@ -1,0 +1,129 @@
+{
+  "title": "礼簿",
+  "blocks": [
+    {
+      "inlines": [],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    }
+  ],
+  "volume": "卷一",
+  "author": "",
+  "profile": {
+    "writing_mode": "vertical-rl",
+    "width": 842,
+    "height": 595,
+    "margin_x": 36,
+    "margin_top": 36,
+    "margin_bottom": 36,
+    "columns": 20,
+    "rows": 30,
+    "panels": 1,
+    "spine": 0,
+    "font_size": 14,
+    "punctuation": "keep",
+    "border": "single",
+    "rules": false,
+    "fish_tail": false,
+    "fish_tail_style": "solid",
+    "fish_tail_direction": "auto",
+    "spine_rules": true,
+    "show_title": true,
+    "show_volume": true,
+    "show_page_number": true,
+    "ink": "#24221f",
+    "rule_color": "#4a4136",
+    "paper": "#ffffff",
+    "accent": "#9b3028",
+    "border_color": "",
+    "line_color": "",
+    "fish_tail_color": "",
+    "spine_ink": "",
+    "show_author": false
+  },
+  "annotations": [],
+  "styles": [],
+  "special": {
+    "records": [
+      {
+        "id": "0",
+        "name": "来宾0",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "1",
+        "name": "来宾1",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "2",
+        "name": "来宾2",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "3",
+        "name": "来宾3",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "4",
+        "name": "来宾4",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "5",
+        "name": "来宾5",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "6",
+        "name": "来宾6",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "7",
+        "name": "来宾7",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      },
+      {
+        "id": "8",
+        "name": "来宾8",
+        "amount": "100.10",
+        "gift": "鲜花",
+        "date": "2026-09-09",
+        "note": "亲友"
+      }
+    ],
+    "occasion": "",
+    "date": "",
+    "per_page": 6,
+    "kind": "gift"
+  }
+}

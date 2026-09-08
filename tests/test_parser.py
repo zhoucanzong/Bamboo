@@ -8,9 +8,9 @@ from bamboo import BambooError, parse, from_dict
 
 def test_parse_metadata_notes_emphasis_indent_and_break():
     b = parse(
-        "@title 竹簡\n@volume 卷二\n@preset red-ruled\n\n# 題名\n\n　　甲[[注]]{{乙}}\n\n---\n丙"
+        "@title 简牍\n@volume 卷二\n@preset red-ruled\n\n# 題名\n\n　　甲[[注]]{{乙}}\n\n---\n丙"
     )
-    assert b.title == "竹簡" and b.volume == "卷二"
+    assert b.title == "简牍" and b.volume == "卷二"
     assert b.blocks[1].indent == 2
     assert [i.kind for i in b.blocks[1].inlines] == ["text", "note", "emphasis"]
     assert b.blocks[2].kind == "pagebreak"

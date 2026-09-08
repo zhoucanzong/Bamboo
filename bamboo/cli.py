@@ -14,7 +14,9 @@ from .parser import load
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog="bamboo", description="Bamboo 古籍排版引擎")
+    parser = argparse.ArgumentParser(
+        prog="bamboo", description="Bamboo 简牍古籍排版引擎"
+    )
     parser.add_argument("--version", action="version", version="Bamboo 0.5.0")
     sub = parser.add_subparsers(dest="command")
     edit = sub.add_parser("edit", help="打开可直接编辑的界面")

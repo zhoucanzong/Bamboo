@@ -11,7 +11,7 @@ DEFAULT_STYLES = {
         TextStyle("chapter-title", "篇章标题", bold=True, after=1, role="heading"),
         TextStyle("preface", "序言"),
         TextStyle("poetry", "诗文分行"),
-        TextStyle("commentary", "课注", font_scale=0.75, role="commentary"),
+        TextStyle("commentary", "段后注", font_scale=0.75, role="commentary"),
         TextStyle("author", "作者署名", font_scale=0.75, align="end"),
         TextStyle("colophon", "题跋落款", font_scale=0.75, align="end", before=1),
         TextStyle("citation", "引文", font_scale=0.85, ink="#5b554a"),
@@ -283,6 +283,6 @@ def page_style_sample(key):
             Block((Inline("学而时习之，不亦说乎？有朋自远方来，不亦乐乎？"),)),
         ),
         volume="卷一",
-        author="竹简书屋",
+        author="简牍书屋",
         profile=profile,
     )

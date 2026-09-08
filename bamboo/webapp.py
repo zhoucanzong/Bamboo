@@ -162,6 +162,10 @@ class EditorApplication:
         state["view"]["preset"] = next(
             (name for name, p in PRESETS.items() if p == active.profile), "custom"
         )
+        if session.book.special is not None:
+            from .structured import summary
+
+            state["view"]["special"] = summary(session.book.special)
         state["view"]["numbered_notes"] = [
             {
                 "target": i.target,
@@ -245,7 +249,11 @@ def make_handler(app):
                         .replace("__BAMBOO_TOKEN__", app.token)
                     )
                     self._send(data.encode(), "text/html; charset=utf-8")
-                elif path in {"/assets/app.js", "/assets/style.css"}:
+                elif path in {
+                    "/assets/app.js",
+                    "/assets/structured.js",
+                    "/assets/style.css",
+                }:
                     self._send(
                         (web / path.rsplit("/", 1)[1]).read_bytes(),
                         (
@@ -294,7 +302,38 @@ def make_handler(app):
                 data = self._body()
                 path = urlparse(self.path).path
                 if path == "/api/documents":
-                    session = EditorSession()
+                    if data.get("kind"):
+                        from .structured import from_dict
+                        from .model import Book, Block
+
+                        special = from_dict({"kind": data["kind"]})
+                        names = {
+                            "gift": "礼簿",
+                            "genealogy": "族谱",
+                            "gongche": "工尺谱",
+                        }
+                        p = PRESETS["horizontal"].updated(
+                            width=842,
+                            height=595,
+                            columns=20,
+                            rows=30,
+                            font_size=14,
+                            margin_x=36,
+                            margin_top=36,
+                            margin_bottom=36,
+                            border="single",
+                        )
+                        session = EditorSession(
+                            Book(
+                                "未命名" + names[data["kind"]],
+                                (Block(),),
+                                volume="",
+                                profile=p,
+                                special=special,
+                            )
+                        )
+                    else:
+                        session = EditorSession()
                     if data.get("preset"):
                         session.dispatch(
                             {"type": "set_profile", "preset": data["preset"]}

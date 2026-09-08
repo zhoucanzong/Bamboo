@@ -291,7 +291,23 @@ class EditorSession:
             _, a = self._check_position(draft, raw["anchor"])
             _, b = self._check_position(draft, raw["focus"])
             draft["selection"] = Selection(a, b)
-        if kind in {"insert_text", "replace_range"}:
+        if draft["book"].special is not None and kind not in {
+            "set_special",
+            "set_metadata",
+            "set_profile",
+            "set_direction",
+        }:
+            raise BambooError("请通过专用记录编辑器修改这类文档")
+        if kind == "set_special":
+            from .structured import from_dict
+
+            value = from_dict(command.get("value"))
+            if draft["book"].special is None:
+                raise BambooError("请新建对应的专用文档")
+            if value.kind != draft["book"].special.kind:
+                raise BambooError("不能更改专用文档类型")
+            draft["book"] = replace(draft["book"], special=value)
+        elif kind in {"insert_text", "replace_range"}:
             self._replace_text(draft, command, command.get("text", ""))
         elif kind == "insert_linebreak":
             self._replace_text(draft, command, "\n", soft=True)
@@ -643,6 +659,8 @@ class EditorSession:
             for command in commands:
                 self._command(draft, command)
             book = self._finish(draft)
+            if book.special is not None:
+                compose(book)  # Reject invalid specialized geometry before committing.
             snapshot = book, tuple(draft["ids"]), draft["selection"]
             if snapshot != self._snapshot():
                 self._undo.append(self._snapshot())
