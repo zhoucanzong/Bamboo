@@ -29,7 +29,7 @@ def money(value):
     if not isinstance(value, str) or not re.fullmatch(
         r"\d{1,12}(?:\.\d{1,2})?", value.strip()
     ):
-        raise BambooError("礼金请输入非负金额，最多两位小数和十二位整数")
+        raise BambooError("金额请输入非负金额，最多两位小数和十二位整数")
     return Decimal(value).quantize(Decimal(".01"))
 
 
@@ -96,7 +96,7 @@ class GiftRecord:
         identifier(self.id)
         text(self.name, "姓名", 40, False)
         object.__setattr__(self, "amount", format(money(self.amount), ".2f"))
-        text(self.gift, "礼品", 120)
+        text(self.gift, "物品", 120)
         text(self.note, "备注", 300)
         text(self.date, "日期", 10)
         if self.date:
@@ -116,7 +116,7 @@ class GiftLedger:
 
     def __post_init__(self):
         if self.kind != "gift":
-            raise BambooError("无效礼簿类型")
+            raise BambooError("无效册簿类型")
         text(self.occasion, "事由", 80)
         text(self.date, "日期", 30)
         validate_records(self.records, GiftRecord)
@@ -126,7 +126,7 @@ class GiftLedger:
         if sum((money(r.amount) for r in self.records), Decimal(0)) >= Decimal(
             "1000000000000"
         ):
-            raise BambooError("礼金总额超出十二位整数范围")
+            raise BambooError("金额总额超出十二位整数范围")
 
 
 def validate_records(records, cls):
@@ -144,7 +144,11 @@ def validate_records(records, cls):
 def from_dict(data):
     if not isinstance(data, dict):
         raise BambooError("专用文档需要为对象")
-    types = {"gift": (GiftLedger, GiftRecord), "genealogy": (Genealogy, FamilyPerson)}
+    types = {
+        "gift": (GiftLedger, GiftRecord),
+        "genealogy": (Genealogy, FamilyPerson),
+        "gongche": (GongcheScore, GongcheNote),
+    }
     if data.get("kind") not in types:
         raise BambooError("未知专用文档类型")
     cls, record_cls = types[data["kind"]]
@@ -161,7 +165,9 @@ def from_dict(data):
 
 
 def validate(value):
-    if value is not None and not isinstance(value, (GiftLedger, Genealogy)):
+    if value is not None and not isinstance(
+        value, (GiftLedger, Genealogy, GongcheScore)
+    ):
         raise BambooError("无效专用文档")
 
 
@@ -180,6 +186,15 @@ def summary(document):
             "count": len(document.records),
             "generations": max(
                 family_generations(document.records).values(), default=0
+            ),
+        }
+    if isinstance(document, GongcheScore):
+        return {
+            "kind": "gongche",
+            "count": len(document.records),
+            "phrases": sum(
+                i == 0 or r.phrase != document.records[i - 1].phrase
+                for i, r in enumerate(document.records)
             ),
         }
     return {}
@@ -293,3 +308,64 @@ def family_generations(records):
     if visited != len(edges):
         raise BambooError("亲子关系形成循环，请检查世代关系")
     return {i: level[root(i)] for i in ids}
+
+
+@dataclass(frozen=True)
+class GongcheNote:
+    id: str
+    symbol: str
+    lyric: str = ""
+    beat: str = ""
+    register: str = ""
+    phrase: str = "第一句"
+    lyric_span: int = 1
+
+    def __post_init__(self):
+        identifier(self.id)
+        text(self.symbol, "谱字", 4, False)
+        text(self.lyric, "唱词", 80)
+        text(self.beat, "板眼", 8)
+        text(self.register, "音区", 8)
+        text(self.phrase, "分句", 40, False)
+        if type(self.lyric_span) is not int or not 1 <= self.lyric_span <= 16:
+            raise BambooError("唱词对应谱字数应为1～16")
+        if self.lyric_span > 1 and not self.lyric:
+            raise BambooError("一字多音需要填写起始唱词")
+
+
+@dataclass(frozen=True)
+class GongcheScore:
+    records: tuple = ()
+    occasion: str = ""
+    date: str = ""
+    per_page: int = 8
+    systems_per_page: int = 3
+    kind: str = "gongche"
+
+    def __post_init__(self):
+        if self.kind != "gongche":
+            raise BambooError("无效工尺谱类型")
+        validate_records(self.records, GongcheNote)
+        object.__setattr__(self, "records", tuple(self.records))
+        text(self.occasion, "曲牌或说明", 80)
+        text(self.date, "日期", 30)
+        if type(self.per_page) is not int or not 1 <= self.per_page <= 16:
+            raise BambooError("每组最多谱字数为1～16")
+        if (
+            type(self.systems_per_page) is not int
+            or not 1 <= self.systems_per_page <= 4
+        ):
+            raise BambooError("每页谱组数为1～4")
+        covered_until = -1
+        for i, n in enumerate(self.records):
+            end = i + n.lyric_span
+            if n.lyric_span > self.per_page:
+                raise BambooError("一字多音跨度超过每组容量，请增加每组谱字数")
+            if end > len(self.records) or any(
+                r.phrase != n.phrase for r in self.records[i:end]
+            ):
+                raise BambooError("唱词跨度不能超出当前分句")
+            if i < covered_until and (n.lyric or n.lyric_span > 1):
+                raise BambooError("唱词对应范围重叠，请将后续对应谱字的唱词留空")
+            if n.lyric_span > 1:
+                covered_until = end

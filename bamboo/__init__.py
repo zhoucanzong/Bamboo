@@ -17,8 +17,23 @@ from .model import (
 from .parser import from_dict, load, parse
 from .editor import EditorSession, Position, Selection, RevisionConflict
 
-__version__ = "0.5.0"
+from .structured import (
+    GiftRecord,
+    GiftLedger,
+    FamilyPerson,
+    Genealogy,
+    GongcheNote,
+    GongcheScore,
+)
+
+__version__ = "0.6.0"
 __all__ = [
+    "GiftRecord",
+    "GiftLedger",
+    "FamilyPerson",
+    "Genealogy",
+    "GongcheNote",
+    "GongcheScore",
     "Annotation",
     "BambooError",
     "Block",

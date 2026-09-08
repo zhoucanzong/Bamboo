@@ -373,7 +373,8 @@ def test_gift_editor_add_calculate_edit_undo_and_export(editor):
     page, app, folder, expect, url = editor
     page.locator("#gift-book").click()
     expect(page.locator("#structured-dialog")).to_be_visible()
-    page.locator("#structured-title").fill("婚庆礼簿")
+    expect(page.locator("#structured-systems-label")).not_to_be_visible()
+    page.locator("#structured-title").fill("婚庆册簿")
     for name, amount in [("张三", "1000.50"), ("李四", "600")]:
         page.locator("#structured-add").click()
         row = page.locator("#structured-records tbody tr").last
@@ -413,6 +414,7 @@ def test_genealogy_people_relations_cycle_validation_and_paper_edit(editor):
     page, app, folder, expect, url = editor
     page.locator("#family-book").click()
     expect(page.locator("#structured-dialog")).to_be_visible()
+    expect(page.locator("#structured-systems-label")).not_to_be_visible()
     for name in ["张守礼", "李氏", "张文清"]:
         page.locator("#structured-add").click()
         page.locator("#structured-records tbody tr").last.locator(
@@ -440,3 +442,52 @@ def test_genealogy_people_relations_cycle_validation_and_paper_edit(editor):
     page.screenshot(path=str(folder / "genealogy-editor.png"))
     page.reload()
     expect(page.locator("#word-count")).to_have_text("3 条记录")
+
+
+def test_gongche_editor_alignment_delete_move_and_export(editor):
+    page, app, folder, expect, url = editor
+    page.locator("#gongche-book").click()
+    expect(page.locator("#structured-dialog")).to_be_visible()
+    expect(page.locator("#structured-systems-label")).to_be_visible()
+    for symbol in ["上", "尺", "工", "凡", "六"]:
+        page.locator("#structured-add").click()
+        row = page.locator("#structured-records tbody tr").last
+        row.locator("[data-field=symbol]").fill(symbol)
+    rows = page.locator("#structured-records tbody tr")
+    rows.first.locator("[data-field=lyric]").fill("春")
+    rows.first.locator("[data-field=lyric_span]").fill("3")
+    rows.first.locator("[data-field=beat]").fill("板")
+    rows.nth(3).locator("[data-field=lyric]").fill("风")
+    page.locator("#structured-save").click()
+    expect(page.locator("#structured-dialog")).not_to_be_visible()
+    expect(page.locator("#word-count")).to_have_text("5 条记录")
+    assert current(app).book.special.records[0].lyric_span == 3
+    page.locator(".page text[data-field=symbol]").first.click()
+    page.locator("#structured-records tbody tr").nth(1).get_by_role(
+        "button", name="删除", exact=True
+    ).click()
+    expect(
+        page.locator("#structured-records tbody tr").first.locator(
+            "[data-field=lyric_span]"
+        )
+    ).to_have_value("2")
+    page.locator("#structured-records tbody tr").first.get_by_role(
+        "button", name="下移", exact=True
+    ).click()
+    page.locator("#structured-direction").select_option("horizontal-tb")
+    page.locator("#structured-save").click()
+    expect(page.locator("#structured-dialog")).not_to_be_visible()
+    assert current(app).book.special.records[1].lyric == "春"
+    assert current(app).book.special.records[1].lyric_span == 2
+    assert not current(app).book.profile.vertical
+    page.locator("#undo").click()
+    expect(page.locator("#word-count")).to_have_text("5 条记录")
+    page.locator("#gongche-book").click()
+    page.screenshot(path=str(folder / "gongche-editor.png"))
+    page.locator("#structured-cancel").click()
+    for fmt in ["pdf", "html", "docx"]:
+        page.locator("#export").click()
+        page.locator("#modal-format").select_option(fmt)
+        with page.expect_download() as download:
+            page.locator("#modal-form button[type=submit]").click()
+        assert download.value.failure() is None

@@ -111,8 +111,8 @@ function render(next){
   $('annotation-list').replaceChildren();state.book.annotations.forEach((note,index)=>{const item=document.createElement('div'),remove=document.createElement('button');remove.textContent='移除';remove.onclick=()=>command({type:'remove_annotation',index});item.append(remove,document.createTextNode((note.placement==='top'?'眉批：':'旁批：')+note.text));$('annotation-list').append(item);});
   (state.view.numbered_notes||[]).forEach((note,index)=>{const item=document.createElement('div'),edit=document.createElement('button');edit.textContent='编辑';edit.onclick=()=>editNumberedNote(note.target);item.append(edit,document.createTextNode(`编号 ${index+1} · ${note.label||'注文'}：${note.text}`));$('annotation-list').append(item);});
   const special=state.book.special;
-  for(const id of ['block-kind','text-style','emphasis','plain','label','note','numbered-note','ruby','footnote','annotation','preset','rows','columns','indent','styles','chapter','cover','seal','page-templates','page-templates-side','symbols'])$(id).disabled=!!special;
-  if(special){$('word-count').textContent=special.records.length+' 条记录';$('mode-label').textContent=({gift:'礼簿',genealogy:'族谱',gongche:'工尺谱'}[special.kind])+' · 可编辑';$('section-name').textContent='专用文档';}
+  for(const id of ['block-kind','text-style','emphasis','plain','label','note','numbered-note','ruby','footnote','annotation','preset','rows','columns','punctuation','indent','styles','chapter','cover','seal','page-templates','page-templates-side','symbols'])$(id).disabled=!!special;
+  if(special){$('word-count').textContent=special.records.length+' 条记录';$('mode-label').textContent=({gift:'册簿',genealogy:'族谱',gongche:'工尺谱'}[special.kind])+' · 可编辑';$('section-name').textContent='专用文档';}
   $('save-status').textContent='已自动保存';paintSelection();refreshLibrary();
 }
 function syncSelection(){if(!state)return;const current=structuredClone(selection);queue=queue.then(()=>json('/api/select/'+state.document_id,current)).catch(e=>feedback(e.message,true));}

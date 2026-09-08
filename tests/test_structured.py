@@ -31,7 +31,7 @@ def gift_book(vertical=False, count=9):
         GiftRecord(str(i), "来宾" + str(i), "100.10", "鲜花", "2026-09-09", "亲友")
         for i in range(count)
     )
-    return Book("礼簿", (Block(),), profile=p, special=GiftLedger(records))
+    return Book("册簿", (Block(),), profile=p, special=GiftLedger(records))
 
 
 @pytest.mark.parametrize(
@@ -212,3 +212,112 @@ def test_word_diagram_name_edit_survives_import(tmp_path):
             dst.writestr(name, data)
     imported, warnings = import_docx(raw.getvalue())
     assert imported.book.special.records[0].name == "张守义"
+
+
+def score_book(vertical=True):
+    from bamboo.structured import GongcheNote, GongcheScore
+
+    notes = []
+    for phrase in range(1, 6):
+        for i, symbol in enumerate("上尺工凡六五乙上"):
+            notes.append(
+                GongcheNote(
+                    f"{phrase}_{i}",
+                    symbol,
+                    lyric="春" if i == 0 else "风" if i == 3 else "",
+                    beat="板" if i == 0 else "眼",
+                    phrase=f"第{phrase}句",
+                    lyric_span=3 if i == 0 else 1,
+                )
+            )
+    return Book(
+        "工尺谱",
+        (Block(),),
+        profile=gift_book(vertical, 0).profile,
+        special=GongcheScore(tuple(notes)),
+    )
+
+
+@pytest.mark.parametrize("vertical", [False, True])
+def test_gongche_grouping_merges_conservation_and_roundtrip(tmp_path, vertical):
+    book = score_book(vertical)
+    layout = compose(book)
+    assert len(layout.pages) == 2
+    symbols = [g for p in layout.pages for g in p.glyphs if g.field == "symbol"]
+    assert len(symbols) == 40 and len({g.object_id for g in symbols}) == 40
+    tables = [
+        t
+        for p in layout.pages
+        for w in p.widgets
+        if w["kind"] == "score"
+        for t in w["tables"]
+    ]
+    assert len(tables) == 5
+    assert all(
+        any(
+            c.get("rowspan" if vertical else "colspan") == 3 and c["field"] == "lyric"
+            for c in t["cells"]
+        )
+        for t in tables
+    )
+    result = render(book, tmp_path)
+    restored, warnings = import_docx(Path(result.files["docx"]).read_bytes())
+    assert restored.book.special == book.special
+    assert from_dict(json.loads(json.dumps(asdict(book)))) == book
+    # A changed lyric must be read from the real table, not its saved source.
+    raw = BytesIO()
+    with zipfile.ZipFile(result.files["docx"]) as src, zipfile.ZipFile(raw, "w") as dst:
+        for name in src.namelist():
+            data = src.read(name)
+            if name == "word/document.xml":
+                data = data.replace("春".encode(), "秋".encode())
+            dst.writestr(name, data)
+    changed, _ = import_docx(raw.getvalue())
+    assert changed.book.special.records[0].lyric == "秋"
+    assert changed.book.special.records[0].lyric_span == 3
+
+
+@pytest.mark.parametrize(
+    "records,capacity",
+    [
+        ([{"id": "a", "symbol": "上", "lyric": "春", "lyric_span": 2}], 8),
+        (
+            [
+                {"id": "a", "symbol": "上", "lyric": "春", "lyric_span": 2},
+                {"id": "b", "symbol": "尺", "lyric": "风"},
+            ],
+            8,
+        ),
+        (
+            [
+                {"id": "a", "symbol": "上", "lyric": "春", "lyric_span": 2},
+                {"id": "b", "symbol": "尺", "phrase": "第二句"},
+            ],
+            8,
+        ),
+        (
+            [
+                {"id": "a", "symbol": "上", "lyric": "春", "lyric_span": 2},
+                {"id": "b", "symbol": "尺"},
+            ],
+            1,
+        ),
+    ],
+)
+def test_invalid_lyric_mapping_is_rejected(records, capacity):
+    from bamboo.structured import from_dict as special_from_dict
+
+    with pytest.raises(BambooError):
+        special_from_dict({"kind": "gongche", "records": records, "per_page": capacity})
+
+
+def test_old_commentary_document_keeps_content_and_uses_new_ui_name():
+    from bamboo.styles import style_registry
+
+    book = from_dict(
+        {"title": "旧稿", "blocks": [{"kind": "commentary", "text": "旧稿课注内容"}]}
+    )
+    assert book.blocks[0].text == "旧稿课注内容"
+    assert book.blocks[0].kind == "commentary"
+    assert style_registry(book)["commentary"].name == "段后注"
+    assert book.special is None

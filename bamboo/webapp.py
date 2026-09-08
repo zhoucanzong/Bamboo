@@ -308,7 +308,7 @@ def make_handler(app):
 
                         special = from_dict({"kind": data["kind"]})
                         names = {
-                            "gift": "礼簿",
+                            "gift": "册簿",
                             "genealogy": "族谱",
                             "gongche": "工尺谱",
                         }

@@ -1,0 +1,418 @@
+{
+  "title": "工尺谱排版示例",
+  "blocks": [
+    {
+      "inlines": [],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    }
+  ],
+  "volume": "卷一",
+  "author": "",
+  "profile": {
+    "writing_mode": "vertical-rl",
+    "width": 842,
+    "height": 595,
+    "margin_x": 36,
+    "margin_top": 36,
+    "margin_bottom": 36,
+    "columns": 20,
+    "rows": 30,
+    "panels": 1,
+    "spine": 0,
+    "font_size": 14,
+    "punctuation": "keep",
+    "border": "single",
+    "rules": false,
+    "fish_tail": false,
+    "fish_tail_style": "solid",
+    "fish_tail_direction": "auto",
+    "spine_rules": true,
+    "show_title": true,
+    "show_volume": true,
+    "show_page_number": true,
+    "ink": "#24221f",
+    "rule_color": "#4a4136",
+    "paper": "#ffffff",
+    "accent": "#9b3028",
+    "border_color": "",
+    "line_color": "",
+    "fish_tail_color": "",
+    "spine_ink": "",
+    "show_author": false
+  },
+  "annotations": [],
+  "styles": [],
+  "special": {
+    "records": [
+      {
+        "id": "1_0",
+        "symbol": "上",
+        "lyric": "春",
+        "beat": "板",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 3
+      },
+      {
+        "id": "1_1",
+        "symbol": "尺",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "1_2",
+        "symbol": "工",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "1_3",
+        "symbol": "凡",
+        "lyric": "风",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "1_4",
+        "symbol": "六",
+        "lyric": "入",
+        "beat": "板",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "1_5",
+        "symbol": "五",
+        "lyric": "帘",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "1_6",
+        "symbol": "乙",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "1_7",
+        "symbol": "上",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第1句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_0",
+        "symbol": "上",
+        "lyric": "春",
+        "beat": "板",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 3
+      },
+      {
+        "id": "2_1",
+        "symbol": "尺",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_2",
+        "symbol": "工",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_3",
+        "symbol": "凡",
+        "lyric": "风",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_4",
+        "symbol": "六",
+        "lyric": "入",
+        "beat": "板",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_5",
+        "symbol": "五",
+        "lyric": "帘",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_6",
+        "symbol": "乙",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "2_7",
+        "symbol": "上",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第2句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_0",
+        "symbol": "上",
+        "lyric": "春",
+        "beat": "板",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 3
+      },
+      {
+        "id": "3_1",
+        "symbol": "尺",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_2",
+        "symbol": "工",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_3",
+        "symbol": "凡",
+        "lyric": "风",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_4",
+        "symbol": "六",
+        "lyric": "入",
+        "beat": "板",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_5",
+        "symbol": "五",
+        "lyric": "帘",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_6",
+        "symbol": "乙",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "3_7",
+        "symbol": "上",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第3句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_0",
+        "symbol": "上",
+        "lyric": "春",
+        "beat": "板",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 3
+      },
+      {
+        "id": "4_1",
+        "symbol": "尺",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_2",
+        "symbol": "工",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_3",
+        "symbol": "凡",
+        "lyric": "风",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_4",
+        "symbol": "六",
+        "lyric": "入",
+        "beat": "板",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_5",
+        "symbol": "五",
+        "lyric": "帘",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_6",
+        "symbol": "乙",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "4_7",
+        "symbol": "上",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第4句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_0",
+        "symbol": "上",
+        "lyric": "春",
+        "beat": "板",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 3
+      },
+      {
+        "id": "5_1",
+        "symbol": "尺",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_2",
+        "symbol": "工",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_3",
+        "symbol": "凡",
+        "lyric": "风",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_4",
+        "symbol": "六",
+        "lyric": "入",
+        "beat": "板",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_5",
+        "symbol": "五",
+        "lyric": "帘",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_6",
+        "symbol": "乙",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      },
+      {
+        "id": "5_7",
+        "symbol": "上",
+        "lyric": "",
+        "beat": "眼",
+        "register": "",
+        "phrase": "第5句",
+        "lyric_span": 1
+      }
+    ],
+    "occasion": "示例谱字，不对应实际曲目",
+    "date": "",
+    "per_page": 8,
+    "systems_per_page": 3,
+    "kind": "gongche"
+  }
+}

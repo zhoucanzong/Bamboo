@@ -438,7 +438,11 @@ class EditorSession:
                     raise BambooError("未知版式")
                 profile = PRESETS[command["preset"]]
             else:
-                profile = current.profile.updated(**command.get("values", {}))
+                values = dict(command.get("values", {}))
+                if draft["book"].special is not None and "font_size" in values:
+                    values.setdefault("rows", 1)
+                    values.setdefault("columns", 1)
+                profile = current.profile.updated(**values)
             self._set_draft_profile(draft, profile, section_index, command.get("scope"))
         elif kind == "set_direction":
             mode = command.get("writing_mode")

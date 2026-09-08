@@ -100,6 +100,15 @@ def render(
         warnings.append(
             "专用文档保留原生文字与表格；Word 内增删记录后，回导简牍可重新计算金额大写和合计。每页小计按导出时的记录分组，Word 改字重排后可能改变页数。"
         )
+    if (
+        book.special is not None
+        and book.special.kind == "gongche"
+        and "docx" in formats
+        and docx_mode == "flow"
+    ):
+        warnings.append(
+            "工尺谱使用原生表格和合并单元格对应唱词与谱字。应用内增删后会重新分组；Word 内大幅改动合并结构后须核对对应关系。未推断调律、速度或演奏时值。"
+        )
     output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     source_json = json.dumps(
@@ -136,7 +145,7 @@ def render(
         manifest = {
             "schema_version": 1,
             "engine": "bamboo",
-            "engine_version": "0.5.0",
+            "engine_version": "0.6.0",
             "title": book.title,
             "pages": len(layout.pages),
             "units": "pt",

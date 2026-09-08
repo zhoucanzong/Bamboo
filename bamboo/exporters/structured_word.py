@@ -56,6 +56,16 @@ def table(doc, widget, font, p, kind):
             c.width = Pt(widget["widths"][ci])
             c.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
     for raw in widget["cells"]:
+        if raw.get("rowspan", 1) > 1 or raw.get("colspan", 1) > 1:
+            c = t.cell(raw["row"], raw["column"]).merge(
+                t.cell(
+                    raw["row"] + raw.get("rowspan", 1) - 1,
+                    raw["column"] + raw.get("colspan", 1) - 1,
+                )
+            )
+            for extra in list(c._tc.findall(qn("w:p")))[1:]:
+                c._tc.remove(extra)
+    for raw in widget["cells"]:
         c = t.cell(raw["row"], raw["column"])
         pp = c.paragraphs[0]
         pp.paragraph_format.space_before = pp.paragraph_format.space_after = Pt(0)
@@ -96,6 +106,9 @@ def write_structured(doc, layout, font):
     for pi, page in enumerate(layout.pages):
         first = True
         for widget in page.widgets:
+            if widget["kind"] == "score":
+                write_score(doc, widget, font, p, layout.book.special.systems_per_page)
+                continue
             if widget["kind"] == "graph":
                 graph(doc, widget, font, p)
                 continue
@@ -116,15 +129,23 @@ def write_structured(doc, layout, font):
 
 
 def import_structured(doc, saved):
-    from ..structured import GiftRecord, GiftLedger, FamilyPerson, Genealogy
+    from ..structured import (
+        GiftRecord,
+        GiftLedger,
+        FamilyPerson,
+        Genealogy,
+        GongcheScore,
+        GongcheNote,
+    )
     from ..editor import EditorSession
     from ..model import Book, Block, BambooError
 
-    if not isinstance(saved.special, (GiftLedger, Genealogy)):
+    if not isinstance(saved.special, (GiftLedger, Genealogy, GongcheScore)):
         return None
     kind = saved.special.kind
     values = {}
     diagram_names = {}
+    lyric_spans = {}
     order = []
     title = None
     for sdt in doc._element.body.iter(qn("w:sdt")):
@@ -140,6 +161,36 @@ def import_structured(doc, saved):
             title = title or value
         if key.startswith("bamboo:" + kind + ":"):
             _, _, record, field = key.split(":")
+            if kind == "gongche" and field == "lyric":
+                cell = sdt.getparent()
+                while cell is not None and cell.tag != qn("w:tc"):
+                    cell = cell.getparent()
+                span = 1
+                if cell is not None:
+                    props = cell.find(qn("w:tcPr"))
+                    if saved.profile.vertical:
+                        merge = (
+                            props.find(qn("w:vMerge")) if props is not None else None
+                        )
+                        if merge is not None and merge.get(qn("w:val")) == "restart":
+                            row = cell.getparent()
+                            nextrow = row.getnext()
+                            while nextrow is not None and nextrow.tag == qn("w:tr"):
+                                first = nextrow.find(qn("w:tc"))
+                                vm = (
+                                    first.find(qn("w:tcPr") + "/" + qn("w:vMerge"))
+                                    if first is not None
+                                    else None
+                                )
+                                if vm is None or vm.get(qn("w:val")) == "restart":
+                                    break
+                                span += 1
+                                nextrow = nextrow.getnext()
+                    else:
+                        gs = props.find(qn("w:gridSpan")) if props is not None else None
+                        if gs is not None:
+                            span = int(gs.get(qn("w:val"), "1"))
+                lyric_spans[record] = span
             if field == "diagram_name":
                 diagram_names[record] = value
                 continue
@@ -154,15 +205,47 @@ def import_structured(doc, saved):
                 "birth",
                 "death",
                 "biography",
+                "symbol",
+                "lyric",
+                "beat",
+                "register",
+                "phrase",
             }:
                 continue
             if record not in values:
                 values[record] = {}
                 order.append(record)
+            if field in values[record]:
+                return None
             values[record][field] = value
     if not values and saved.special.records:
         return None
-    if saved.profile.vertical:
+    if kind == "gongche":
+        order = []
+        for top in doc.tables:
+            leaves = [
+                t
+                for t in top._tbl.iter(qn("w:tbl"))
+                if len(list(t.iter(qn("w:tbl")))) == 1
+            ]
+            if saved.profile.vertical:
+                leaves.reverse()
+            for leaf in leaves:
+                local = []
+                phrase = None
+                for tag in leaf.iter(qn("w:tag")):
+                    key = tag.get(qn("w:val"), "")
+                    if key.startswith("bamboo:gongche:"):
+                        _, _, record, field = key.split(":")
+                        if record not in local:
+                            local.append(record)
+                        if field == "phrase":
+                            phrase = values.get(record, {}).get("phrase")
+                for record in local:
+                    if phrase is not None:
+                        values[record]["phrase"] = phrase
+                order.extend(local)
+    elif saved.profile.vertical:
         order = []
         for t in doc.tables:
             local = []
@@ -176,6 +259,11 @@ def import_structured(doc, saved):
     try:
         if kind == "gift":
             records = tuple(GiftRecord(id=i, **values[i]) for i in order)
+        elif kind == "gongche":
+            records = tuple(
+                GongcheNote(id=i, **{**values[i], "lyric_span": lyric_spans.get(i, 1)})
+                for i in order
+            )
         else:
             import re
 
@@ -302,3 +390,42 @@ def graph(doc, widget, font, p):
         else:
             tagged(para, node["text"], font, node["size"], node["color"])
         anchor.add_run()._r.append(pict)
+
+
+def write_score(doc, widget, font, p, systems):
+    if widget["vertical"]:
+        outer = doc.add_table(rows=1, cols=systems)
+        outer.autofit = False
+        for col in outer.columns:
+            col.width = Pt(widget["width"] / systems)
+        for cell in outer.rows[0].cells:
+            cell.width = Pt(widget["width"] / systems)
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+            para = cell.paragraphs[0]
+            para.paragraph_format.space_before = para.paragraph_format.space_after = Pt(
+                0
+            )
+            para.paragraph_format.line_spacing = Pt(1)
+            for side in ["top", "bottom"]:
+                margins = cell._tc.get_or_add_tcPr().find(qn("w:tcMar"))
+                if margins is None:
+                    margins = element("w:tcMar")
+                    cell._tc.get_or_add_tcPr().append(margins)
+                margins.append(element("w:" + side, w=0, type="dxa"))
+        for i, group in enumerate(widget["tables"]):
+            cell = outer.cell(0, systems - i - 1)
+            table(cell, group, font, p, "gongche")
+            tail = cell.paragraphs[-1]
+            tail.paragraph_format.line_spacing = Pt(1)
+            tail.paragraph_format.space_before = tail.paragraph_format.space_after = Pt(
+                0
+            )
+    else:
+        for i, group in enumerate(widget["tables"]):
+            if i:
+                gap = doc.add_paragraph()
+                gap.paragraph_format.line_spacing = Pt(12)
+                gap.paragraph_format.space_before = gap.paragraph_format.space_after = (
+                    Pt(0)
+                )
+            table(doc, group, font, p, "gongche")

@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="bamboo-token" content="__BAMBOO_TOKEN__">
-  <title>Bamboo 简牍 · 古籍编辑</title>
+  <title>Bamboo 简牍 · 文献排版</title>
   <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
 <header class="app-header">
-  <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 28V5m10 23V4M8 11h6m4-1h6M8 21h6m4-1h6M11 8C5 7 4 4 3 3m18 13c5-1 7-4 8-6"/></svg><span>BAMBOO<small>简牍 · 古籍编辑</small></span></div>
+  <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 28V5m10 23V4M8 11h6m4-1h6M8 21h6m4-1h6M11 8C5 7 4 4 3 3m18 13c5-1 7-4 8-6"/></svg><span>BAMBOO<small>简牍 · 文献排版</small></span></div>
   <div class="title-wrap"><input id="title" aria-label="文档名称" value="未命名文档"><span id="save-status">正在打开…</span></div>
   <div class="file-actions"><button id="new">新建</button><button id="open">打开</button><button id="save">保存副本</button><button id="export" class="primary">导出 <span>↗</span></button></div>
 </header>
@@ -17,7 +17,7 @@
   <div class="tool-group"><select id="block-kind" aria-label="段落样式"><option value="paragraph">正文</option><option value="heading">题名</option><option value="commentary">段后注</option></select><button id="emphasis">朱色强调</button><button id="plain">清除格式</button><button id="label">带框标签</button></div>
   <div class="tool-group"><button id="note">双行夹注</button><button id="numbered-note">编号注释</button><button id="ruby">短旁注</button><button id="footnote">脚注</button><button id="annotation">旁批 / 眉批</button></div>
   <div class="tool-group"><button id="appearance">版面元素</button><button id="symbols">符号库</button></div>
-  <div class="tool-group"><button id="gift-book">礼簿</button><button id="family-book">族谱</button></div>
+  <div class="tool-group"><button id="gift-book">册簿</button><button id="family-book">族谱</button><button id="gongche-book">工尺谱</button></div>
   <div class="tool-group"><button id="styles">文字样式</button><button id="page-templates">页面样式</button><button id="chapter">篇章版式</button><button id="cover">题签封面</button><button id="seal">文字印章</button></div>
   <div class="tool-group direction"><button id="vertical" class="active">竖排</button><button id="horizontal">横排</button></div>
   <div class="tool-group"><label class="zoom-label">缩放 <select id="zoom" aria-label="页面缩放"><option value="fit">适合窗口</option><option value="1">100%</option><option value="0.8">80%</option><option value="1.5">150%</option></select></label></div>
@@ -37,8 +37,8 @@
   <div class="gallery-footer"><p id="page-style-description" role="status">选择样式查看说明。</p><label class="check-row"><input id="page-style-new" type="checkbox">从当前段落开始新篇章</label><div class="dialog-actions"><button id="page-style-cancel">取消</button><button id="page-style-apply" class="primary" disabled>应用到当前篇章</button></div></div>
 </dialog>
 <dialog id="structured-dialog" aria-labelledby="structured-heading"><form id="structured-form">
-<div class="gallery-heading"><div><h2 id="structured-heading">礼簿</h2><p id="structured-intro">逐条录入，自动计算金额大写和合计。</p></div><button type="button" id="structured-close">关闭</button></div>
-<div class="structured-settings"><label>文档名称<input id="structured-title" required></label><label>排版方向<select id="structured-direction"><option value="horizontal-tb">横排</option><option value="vertical-rl">竖排</option></select></label><label id="structured-cap-label">每页最多记录<input id="structured-cap" type="number" min="1" max="20" value="6"></label><label>事由 / 副标题<input id="structured-occasion"></label><label>日期<input id="structured-date"></label></div>
+<div class="gallery-heading"><div><h2 id="structured-heading">册簿</h2><p id="structured-intro">逐条录入，自动计算金额大写和合计。</p></div><button type="button" id="structured-close">关闭</button></div>
+<div class="structured-settings"><label>文档名称<input id="structured-title" required></label><label>排版方向<select id="structured-direction"><option value="horizontal-tb">横排</option><option value="vertical-rl">竖排</option></select></label><label id="structured-cap-label">每页最多记录<input id="structured-cap" type="number" min="1" max="20" value="6"></label><label id="structured-systems-label" hidden>每页谱组数<input id="structured-systems" type="number" min="1" max="4" value="3"></label><label>事由 / 副标题<input id="structured-occasion"></label><label>日期<input id="structured-date"></label></div>
 <div id="structured-records" class="structured-records"></div><button type="button" id="structured-add" class="element-button">＋ 添加记录</button>
 <div class="structured-footer"><p id="structured-summary" role="status"></p><p id="structured-error" role="alert"></p><div class="dialog-actions"><button type="button" id="structured-cancel">取消</button><button type="submit" id="structured-save" class="primary">保存并排版</button></div></div>
 </form></dialog>

@@ -60,6 +60,26 @@ def export_html(layout, font, path):
                             + "</tr>"
                         )
                     transcript.append("</table>")
+                elif widget["kind"] == "score":
+                    for table in widget["tables"]:
+                        transcript.append("<table>")
+                        for row in range(table["rows"]):
+                            transcript.append(
+                                "<tr>"
+                                + "".join(
+                                    '<td colspan="'
+                                    + str(c.get("colspan", 1))
+                                    + '" rowspan="'
+                                    + str(c.get("rowspan", 1))
+                                    + '">'
+                                    + escape(c["text"])
+                                    + "</td>"
+                                    for c in table["cells"]
+                                    if c["row"] == row
+                                )
+                                + "</tr>"
+                            )
+                        transcript.append("</table>")
                 elif widget["kind"] == "graph":
                     transcript.extend(
                         "<p>" + escape(n["text"]) + "</p>" for n in widget["nodes"]
