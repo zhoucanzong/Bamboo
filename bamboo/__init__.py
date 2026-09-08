@@ -11,11 +11,13 @@ from .model import (
     Layout,
     PRESETS,
     Profile,
+    TextStyle,
+    SectionSpec,
 )
 from .parser import from_dict, load, parse
 from .editor import EditorSession, Position, Selection, RevisionConflict
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = [
     "Annotation",
     "BambooError",
@@ -24,6 +26,8 @@ __all__ = [
     "Inline",
     "Layout",
     "Profile",
+    "TextStyle",
+    "SectionSpec",
     "PRESETS",
     "BuildResult",
     "compose",

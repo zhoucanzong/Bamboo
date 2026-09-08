@@ -18,7 +18,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from lxml import etree
 
 from .pdf import pdf_document
-from ..model import BambooError
+from ..model import BambooError, Book, Block
 from ..layout import _frame
 
 
@@ -113,7 +113,7 @@ def _floating_picture(
     inline.getparent().replace(inline, anchor)
 
 
-def _flow_decoration(doc, layout, font):
+def _flow_decoration(doc, layout, font, section=None):
     """Only stationery is an image. All body and annotation stories stay text.
 
     A wrapping spine object in the repeating header excludes the central band
@@ -137,7 +137,7 @@ def _flow_decoration(doc, layout, font):
         polygons=tuple(polygons),
     )
     decoration = replace(layout, pages=(leaf,))
-    header = doc.sections[0].header
+    header = (section or doc.sections[0]).header
     para = header.paragraphs[0]
     para.paragraph_format.space_before = para.paragraph_format.space_after = Pt(0)
     para.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
@@ -172,14 +172,22 @@ def _flow_decoration(doc, layout, font):
     if p.spine and p.show_page_number:
         from .wordflow import set_font
 
-        style = doc.styles.add_style("Bamboo Page Number", 1)
+        style = (
+            doc.styles["Bamboo Page Number"]
+            if "Bamboo Page Number" in doc.styles
+            else doc.styles.add_style("Bamboo Page Number", 1)
+        )
         set_font(style._element.get_or_add_rPr(), font.family, 11)
         style.paragraph_format.line_spacing = Pt(14)
         x = p.margin_x + (p.panel_width if p.panels == 2 else 0)
         y = p.margin_top + p.body_height * 0.83
         pict = OxmlElement("w:pict")
         shape = etree.SubElement(
-            pict, "{" + v + "}rect", id="BambooPageNumber", stroked="f", filled="f"
+            pict,
+            "{" + v + "}rect",
+            id="BambooPageNumber" + str(len(doc.sections)),
+            stroked="f",
+            filled="f",
         )
         shape.set(
             "style",
@@ -231,8 +239,19 @@ def export_docx(layout, font, path, mode="flow", dpi=180):
         section.header_distance = section.footer_distance = Pt(0)
         with pdf_document(layout, font) as pdf:
             for i, page in enumerate(pdf):
+                from docx.enum.section import WD_SECTION_START
+
+                changed_size = i > 0 and (
+                    abs(section.page_width.pt - page.rect.width) > 0.1
+                    or abs(section.page_height.pt - page.rect.height) > 0.1
+                )
+                if changed_size:
+                    section = doc.add_section(WD_SECTION_START.NEW_PAGE)
+                section.page_width, section.page_height = Pt(page.rect.width), Pt(
+                    page.rect.height
+                )
                 para = doc.add_paragraph()
-                para.paragraph_format.page_break_before = i > 0
+                para.paragraph_format.page_break_before = i > 0 and not changed_size
                 para.paragraph_format.space_before = (
                     para.paragraph_format.space_after
                 ) = Pt(0)
@@ -246,15 +265,29 @@ def export_docx(layout, font, path, mode="flow", dpi=180):
                 _floating_picture(
                     para,
                     image,
-                    p.width,
-                    p.height,
+                    page.rect.width,
+                    page.rect.height,
                     f"{layout.book.title} 第 {i+1} 葉，古籍保真版",
                 )
     elif mode in {"flow", "editable"}:
         from .wordflow import write_flow
 
-        write_flow(doc, layout, font)
-        _flow_decoration(doc, layout, font)
+        def decorate(section, begin, end, spec):
+            info = next(s for s in layout.sections if s["block_start"] == begin)
+            page = layout.pages[info["page_offset"]]
+            frame_book = Book(
+                spec.title if spec.title is not None else layout.book.title,
+                (Block(),),
+                volume=spec.volume or "",
+                author=spec.author or "",
+                profile=spec.profile,
+            )
+            frame_layout = replace(
+                layout, book=frame_book, pages=(replace(page, profile=spec.profile),)
+            )
+            _flow_decoration(doc, frame_layout, font, section)
+
+        write_flow(doc, layout, font, decorate)
         _embed_font(doc, font)
     else:
         raise ValueError("DOCX mode must be flow or facsimile")

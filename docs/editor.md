@@ -66,3 +66,16 @@ BAMBOO_BROWSER_TEST=1 python -m pytest tests/test_editor_browser.py -q
 ```
 
 浏览器检查使用 Playwright 与 Chromium，需在开发环境中安装它们。测试实际点击纸面输入、跨段选区、拖选添加短旁注、组合输入只提交一次、撤销重做、刷新恢复、文件打开和三格式下载，并检查无令牌请求、跨站请求和旧版本写入被拒绝。
+
+
+## 文字样式与篇章
+
+`TextStyle` 是可复用的文字样式，`Block.style` 按稳定 key 引用；`Book.styles` 可覆盖内置样式，也可添加新样式。命令 `apply_style` 应用到选区所及段落，`define_style` 修改定义并重排全部引用。字号以篇章正文字号为基准乘以 `font_scale`。`insert_linebreak` 保留段落身份，只插入段内换行；普通回车继续创建新段。
+
+`Block.section` 表示篇章起点，`SectionSpec` 包含可继承的 Profile、版心信息、页码重启与页面类型。`set_section` 默认更新所在篇章，`new: true` 从光标所在段落另起一篇；`clear_section` 移除当前边界。`set_profile` 和 `set_direction` 默认作用于当前篇章，没有分篇时修改基础版式。显式 `scope: "document"` 修改基础 Profile，已有独立 Profile 的篇章仍保持自己的设置。
+
+`insert_cover` 在文档前插入题签书名和可选卷次，原有正文的标识和版式保留。封面文字可直接点击编辑，通过“题签封面”按钮可调整边框和宽度。`insert_inline` 的 `kind: "seal"` 添加方印，`seal_style` 为 `red` 或 `white`。
+
+页面输出携带自己的 `profile` 和 `section_index`；命中测试、光标方向、SVG 画布、打印纸张都采用所在页的尺寸与方向。UI 当前篇章由选区位置决定。
+
+Word 回读使用实际正文、题签文字与印文，结合保留的样式定义和原生分节恢复篇章。没有完整支持任意第三方文本框、手工 Word 样式修改和外部装饰的逆向还原；恢复编辑状态以保存副本为准。

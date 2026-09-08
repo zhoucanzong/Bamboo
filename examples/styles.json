@@ -1,0 +1,511 @@
+{
+  "title": "竹簡讀書集",
+  "blocks": [
+    {
+      "inlines": [
+        {
+          "text": "竹簡讀書集",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "cover-title",
+      "section": {
+        "name": "封面",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 460,
+          "height": 650,
+          "margin_x": 32,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 22,
+          "panels": 1,
+          "spine": 32,
+          "font_size": 20,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": null,
+        "volume": null,
+        "author": null,
+        "page_type": "title-slip",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": null
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "一卷",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "cover-subtitle",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "序言",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "chapter-title",
+      "section": {
+        "name": "序言",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 22,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 17,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "#c52c27",
+          "line_color": "#e1b3ad",
+          "fish_tail_color": "#c52c27",
+          "spine_ink": "",
+          "show_author": true
+        },
+        "title": null,
+        "volume": "序言",
+        "author": "竹簡書屋",
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "讀書之樂在於明理。晨起展卷，清風入窗；夜深秉燭，文字如友。今輯詩文數篇，列於簡冊，以供吟詠。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "preface",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "讀書不覺已春深，一寸光陰一寸金。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "preface",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "歲次丙午仲秋　竹簡書屋識",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "colophon",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "竹簡書屋",
+          "kind": "seal",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "author",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "詩文選",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "chapter-title",
+      "section": {
+        "name": "詩文",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 18,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 18,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "#c52c27",
+          "line_color": "#e1b3ad",
+          "fish_tail_color": "#c52c27",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": null,
+        "volume": "詩文選",
+        "author": "",
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": null
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "春曉",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "heading",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "唐　孟浩然",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "author",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "春眠不覺曉\n處處聞啼鳥\n夜來風雨聲\n花落知多少",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "poetry",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "觀書有感",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "heading",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "宋　朱熹",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "author",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "半畝方塘一鑑開\n天光雲影共徘徊\n問渠那得清如許\n為有源頭活水來",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "poetry",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "學記",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "chapter-title",
+      "section": {
+        "name": "典籍",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 12,
+          "rows": 26,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 14,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "#c52c27",
+          "line_color": "#e1b3ad",
+          "fish_tail_color": "#c52c27",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": null,
+        "volume": "學記",
+        "author": "",
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": null
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "玉不琢，不成器；人不學，不知道。是故古之王者，建國君民，教學為先。雖有嘉肴，弗食，不知其旨也；雖有至道，弗學，不知其善也。是故學然後知不足，教然後知困。知不足，然後能自反也；知困，然後能自強也。故曰教學相長也。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "教學相長，謂教與學互相增益。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "commentary",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "讀書養心",
+          "kind": "seal",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "white"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "colophon",
+      "section": null
+    }
+  ],
+  "volume": "一卷",
+  "author": "",
+  "profile": {
+    "writing_mode": "vertical-rl",
+    "width": 460,
+    "height": 650,
+    "margin_x": 32,
+    "margin_top": 48,
+    "margin_bottom": 48,
+    "columns": 10,
+    "rows": 22,
+    "panels": 1,
+    "spine": 32,
+    "font_size": 20,
+    "punctuation": "judou",
+    "border": "double",
+    "rules": true,
+    "fish_tail": true,
+    "fish_tail_style": "solid",
+    "fish_tail_direction": "auto",
+    "spine_rules": true,
+    "show_title": true,
+    "show_volume": true,
+    "show_page_number": true,
+    "ink": "#24221f",
+    "rule_color": "#4a4136",
+    "paper": "#ffffff",
+    "accent": "#9b3028",
+    "border_color": "",
+    "line_color": "",
+    "fish_tail_color": "",
+    "spine_ink": "",
+    "show_author": false
+  },
+  "annotations": [],
+  "styles": []
+}

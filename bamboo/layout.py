@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import unicodedata
+from dataclasses import replace, asdict
 
 from .model import BambooError, Book, Glyph, Layout, Line, Page, Polygon
 
@@ -60,7 +61,7 @@ def _frame(book, number):
             (right, bottom, left, bottom),
             (left, bottom, left, top),
         ):
-            lines.append(Line(a, b, c, d, weight, p.rule_color))
+            lines.append(Line(a, b, c, d, weight, p.border_color or p.rule_color))
 
     if p.border != "none":
         rect(x0, y0, x1, y1, 0.8)
@@ -73,11 +74,20 @@ def _frame(book, number):
             for col in range(1, p.columns):
                 if p.vertical:
                     xx = start + col * p.line_advance
-                    lines.append(Line(xx, y0, xx, y1, 0.35, p.rule_color))
+                    lines.append(
+                        Line(xx, y0, xx, y1, 0.35, p.line_color or p.rule_color)
+                    )
                 else:
                     yy = y0 + col * p.line_advance
                     lines.append(
-                        Line(start, yy, start + p.panel_width, yy, 0.35, p.rule_color)
+                        Line(
+                            start,
+                            yy,
+                            start + p.panel_width,
+                            yy,
+                            0.35,
+                            p.line_color or p.rule_color,
+                        )
                     )
     if p.spine == 0:
         return glyphs, lines, polygons
@@ -103,14 +113,21 @@ def _frame(book, number):
                     cell,
                     actual,
                     "spine",
-                    color=p.ink,
+                    color=p.spine_ink or p.ink,
                 )
             )
 
     if p.show_title:
         spine_text(book.title, y0 + p.body_height * 0.15, p.body_height * 0.32)
     if p.show_volume:
-        spine_text(book.volume, y0 + p.body_height * 0.52, p.body_height * 0.19, 11)
+        spine_text(
+            book.volume,
+            y0 + p.body_height * (0.48 if p.show_author else 0.52),
+            p.body_height * (0.08 if p.show_author else 0.19),
+            11,
+        )
+    if p.show_author:
+        spine_text(book.author, y0 + p.body_height * 0.59, p.body_height * 0.13, 9)
     if p.show_page_number:
         spine_text(
             chinese_number(number), y0 + p.body_height * 0.83, p.body_height * 0.13, 11
@@ -132,21 +149,23 @@ def _frame(book, number):
                 spine_x + p.spine / 2,
                 yy,
                 min(p.spine * 0.7, p.body_height * 0.05),
-                p.ink,
+                p.fish_tail_color or p.ink,
             )
             lines.extend(extra_lines)
             polygons.extend(extra_polygons)
     return glyphs, lines, polygons
 
 
-def compose(book: Book) -> Layout:
+def _compose_flow(book: Book, display_start=1, note_start=0) -> Layout:
+    from .styles import resolve_style
+
     p = book.profile
     cross, step = p.line_advance, p.cell_advance
     pages, warnings, block_starts = [], [], []
-    glyphs, lines, polygons = _frame(book, 1)
+    glyphs, lines, polygons = _frame(book, display_start)
     col, row, has_body = 0, 0, False
     last = None
-    note_number = 0
+    note_number = note_start
 
     def box_border(items):
         if not items:
@@ -175,7 +194,7 @@ def compose(book: Book) -> Layout:
             pages.append(
                 Page(len(pages) + 1, tuple(glyphs), tuple(lines), tuple(polygons))
             )
-        glyphs, lines, polygons = _frame(book, len(pages) + 1)
+        glyphs, lines, polygons = _frame(book, display_start + len(pages))
         col, row, has_body, last = 0, 0, False, None
 
     def advance():
@@ -208,10 +227,36 @@ def compose(book: Book) -> Layout:
             continue
         if row > 0:
             advance()
+        style = resolve_style(book, block)
+        base_size = p.font_size * style.font_scale
+        if base_size > min(cross * 0.85, step * 0.95):
+            raise BambooError(
+                f"样式“{style.name}”的字号超出字格，请调整样式比例或行栏数"
+            )
+        if col > 0:
+            for _ in range(style.before):
+                advance()
         # A short heading must have room for a following body column on the same page.
         if block.kind == "heading" and col == p.columns * p.panels - 1 and has_body:
             new_page()
-        row, last = block.indent, None
+        length = sum(
+            (
+                2
+                if i.kind in {"numbered_note", "seal"}
+                else (
+                    math.ceil(len(clusters(i.text)) / 4)
+                    if i.kind in {"note", "footnote"}
+                    else len(clusters(i.text))
+                )
+            )
+            for i in block.inlines
+        )
+        aligned = (
+            max(0, (p.rows - length) // 2)
+            if style.align == "center"
+            else max(0, p.rows - length) if style.align == "end" else 0
+        )
+        row, last = max(block.indent, aligned), None
         x, y = position()
         block_starts.append(
             {
@@ -232,8 +277,31 @@ def compose(book: Book) -> Layout:
             chars = [
                 (offset, char)
                 for offset, char in clusters(inline.text)
-                if char not in "\n\r\t"
+                if char not in "\r\t"
             ]
+            if inline.kind == "seal":
+                from .style_layout import place_seal
+
+                slots = min(2, p.rows)
+                if row + slots > p.rows:
+                    advance()
+                x, y = position()
+                gs, ls, ps = place_seal(
+                    inline,
+                    p,
+                    x,
+                    y,
+                    cross if p.vertical else slots * step,
+                    slots * step if p.vertical else cross,
+                    bi,
+                    ii,
+                )
+                glyphs.extend(gs)
+                lines.extend(ls)
+                polygons.extend(ps)
+                row += slots
+                last = None
+                continue
             if inline.kind == "ruby" and row + len(chars) > p.rows:
                 advance()
             if inline.kind == "numbered_note":
@@ -252,7 +320,7 @@ def compose(book: Book) -> Layout:
                             y + j * mini if p.vertical else y,
                             cross if p.vertical else mini,
                             mini if p.vertical else cross,
-                            min(p.font_size * 0.6, mini * 0.85),
+                            min(base_size * 0.6, mini * 0.85),
                             "note_reference",
                             -2,
                             reference_id=inline.target,
@@ -270,7 +338,7 @@ def compose(book: Book) -> Layout:
                 if row + len(chars) > p.rows:
                     advance()
             if inline.kind in {"note", "footnote"}:
-                remaining = chars
+                remaining = [(o, c) for o, c in chars if c != "\n"]
                 while remaining:
                     if row >= p.rows:
                         advance()
@@ -303,7 +371,7 @@ def compose(book: Book) -> Layout:
                                 gy,
                                 gw,
                                 gh,
-                                p.font_size * 0.5,
+                                base_size * 0.5,
                                 inline.kind,
                                 bi,
                                 ii,
@@ -316,6 +384,9 @@ def compose(book: Book) -> Layout:
                     last = None
                 continue
             for ci, (offset, char) in enumerate(chars):
+                if char == "\n":
+                    advance()
+                    continue
                 if (
                     char in PUNCTUATION
                     and p.punctuation == "hide"
@@ -338,7 +409,7 @@ def compose(book: Book) -> Layout:
                             gy,
                             last.width * 0.23,
                             last.height * 0.4,
-                            p.font_size * 0.38,
+                            base_size * 0.38,
                             "punctuation",
                             bi,
                             ii,
@@ -362,24 +433,20 @@ def compose(book: Book) -> Layout:
                     warnings.append(f"段 {bi+1} 字 {offset+1}: 栏首出现闭合标点")
                 x, y = position()
                 role = block.kind if block.kind in {"heading", "commentary"} else "body"
-                color = p.accent if inline.kind == "emphasis" else p.ink
+                color = p.accent if inline.kind == "emphasis" else (style.ink or p.ink)
                 g = Glyph(
                     char.translate(VERTICAL) if p.vertical else char,
                     x,
                     y,
                     cross if p.vertical else step,
                     step if p.vertical else cross,
-                    p.font_size
-                    * (
-                        0.65
-                        if inline.kind == "label"
-                        else 0.75 if block.kind == "commentary" else 1
-                    ),
+                    base_size * (0.65 if inline.kind == "label" else 1),
                     "label" if inline.kind == "label" else role,
                     bi,
                     ii,
                     offset,
                     color,
+                    bold=style.bold,
                 )
                 glyphs.append(g)
                 if inline.kind == "label":
@@ -428,7 +495,7 @@ def compose(book: Book) -> Layout:
                         y,
                         cross if p.vertical else small_step,
                         small_step if p.vertical else cross,
-                        p.font_size * 0.65,
+                        base_size * 0.65,
                         role,
                         bi if source else -2,
                         ii if source else -1,
@@ -454,6 +521,11 @@ def compose(book: Book) -> Layout:
                     box_border(label_glyphs)
             emit_note(note.text, "numbered_note", True)
             row = 1
+        if style.after:
+            if row > 0:
+                advance()
+            for _ in range(style.after):
+                advance()
     if has_body:
         pages.append(Page(len(pages) + 1, tuple(glyphs), tuple(lines), tuple(polygons)))
     if not pages:
@@ -468,10 +540,119 @@ def compose(book: Book) -> Layout:
     return result
 
 
+def compose(book: Book) -> Layout:
+    from .styles import section_ranges
+    from .style_layout import compose_cover
+
+    pages = []
+    starts = []
+    warnings = []
+    sections = []
+    note_start = 0
+    folio = 1
+    for section_index, (begin, end, spec) in enumerate(section_ranges(book)):
+        profile = spec.profile
+        if spec.page_type == "title-slip":
+            profile = profile.updated(punctuation="keep")
+        if not any(b.kind != "pagebreak" for b in book.blocks[begin:end]):
+            continue
+        mapping = [i for i, n in enumerate(book.annotations) if begin <= n.block < end]
+        local = replace(
+            book,
+            profile=profile,
+            title=spec.title if spec.title is not None else book.title,
+            volume=spec.volume or "",
+            author=spec.author or "",
+            blocks=tuple(replace(b, section=None) for b in book.blocks[begin:end]),
+            annotations=tuple(
+                replace(book.annotations[i], block=book.annotations[i].block - begin)
+                for i in mapping
+            ),
+        )
+        if not any(b.kind != "pagebreak" for b in local.blocks):
+            continue
+        display_start = (
+            spec.page_number_start if spec.page_number_start is not None else folio
+        )
+        result = (
+            compose_cover(local, spec)
+            if spec.page_type == "title-slip"
+            else _compose_flow(local, display_start, note_start)
+        )
+        offset = len(pages)
+        sections.append(
+            {
+                "block_start": begin,
+                "block_end": end,
+                "page_offset": offset,
+                "folio_start": display_start,
+                "spec": asdict(replace(spec, profile=profile)),
+            }
+        )
+
+        def global_id(key):
+            if key.startswith("ruby-"):
+                _, bi, ii = key.split("-")
+                return f"ruby-{int(bi)+begin}-{ii}"
+            if key.startswith("annotation-"):
+                return f'annotation-{mapping[int(key.split("-")[-1])]}'
+            return key
+
+        for i, page in enumerate(result.pages):
+            glyphs = tuple(
+                replace(
+                    g,
+                    block=g.block + begin if g.block >= 0 else g.block,
+                    annotation_id=global_id(g.annotation_id),
+                )
+                for g in page.glyphs
+            )
+            boxes = tuple(
+                replace(b, id=global_id(b.id), block=b.block + begin)
+                for b in page.annotations
+            )
+            pages.append(
+                replace(
+                    page,
+                    number=offset + i + 1,
+                    glyphs=glyphs,
+                    annotations=boxes,
+                    profile=profile,
+                    section_index=section_index,
+                    folio=display_start + i,
+                )
+            )
+        starts.extend(
+            {**s, "block": s["block"] + begin, "page": s["page"] + offset}
+            for s in result.block_starts
+        )
+        warnings.extend(result.warnings)
+        folio = display_start + len(result.pages)
+        note_start += sum(
+            i.kind == "numbered_note" for b in local.blocks for i in b.inlines
+        )
+    result = Layout(
+        book,
+        tuple(pages),
+        tuple(dict.fromkeys(warnings)),
+        tuple(starts),
+        tuple(sections),
+    )
+    validate_layout(result)
+    return result
+
+
 def validate_layout(layout):
-    p = layout.book.profile
+    from .styles import section_ranges
+
+    contexts = {
+        i: spec
+        for begin, end, spec in section_ranges(layout.book)
+        for i in range(begin, end)
+    }
     seen = set()
     for page in layout.pages:
+        p = page.profile or layout.book.profile
         annotation_expected = {
             (box.id, offset)
             for box in page.annotations
@@ -500,12 +681,16 @@ def validate_layout(layout):
             raise BambooError(f"第 {page.number} 页批注文字守恒检查失败")
     expected = set()
     for bi, block in enumerate(layout.book.blocks):
+        context = contexts[bi]
+        p = context.profile
         for ii, inline in enumerate(block.inlines):
             for offset, char in clusters(inline.text):
                 if char in "\n\r\t" or (
-                    inline.kind not in {"note", "footnote", "numbered_note", "label"}
+                    inline.kind
+                    not in {"note", "footnote", "numbered_note", "label", "seal"}
                     and char in PUNCTUATION
                     and p.punctuation == "hide"
+                    and context.page_type != "title-slip"
                 ):
                     continue
                 expected.add((bi, ii, offset))

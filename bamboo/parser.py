@@ -7,7 +7,17 @@ import re
 from dataclasses import fields
 from pathlib import Path
 
-from .model import Annotation, BambooError, Block, Book, Inline, PRESETS, Profile
+from .model import (
+    Annotation,
+    BambooError,
+    Block,
+    Book,
+    Inline,
+    PRESETS,
+    Profile,
+    TextStyle,
+    SectionSpec,
+)
 
 
 def _keys(obj, allowed, context):
@@ -30,6 +40,7 @@ def from_dict(data):
             "profile",
             "blocks",
             "annotations",
+            "styles",
         },
         "文档",
     )
@@ -49,7 +60,11 @@ def from_dict(data):
         raise BambooError("blocks 必须是数组")
     parsed = []
     for b in blocks:
-        _keys(b, {"kind", "text", "inlines", "indent", "level"}, "段落")
+        _keys(
+            b,
+            {"kind", "text", "inlines", "indent", "level", "style", "section"},
+            "段落",
+        )
         if "text" in b and "inlines" in b:
             raise BambooError("段落 text 与 inlines 不可同时使用")
         raw = b.get("inlines", [{"text": b["text"]}] if "text" in b else [])
@@ -57,7 +72,11 @@ def from_dict(data):
             raise BambooError("inlines 必须是数组")
         spans = []
         for item in raw:
-            _keys(item, {"kind", "text", "annotation", "target", "boxed"}, "行内内容")
+            _keys(
+                item,
+                {"kind", "text", "annotation", "target", "boxed", "seal_style"},
+                "行内内容",
+            )
             spans.append(
                 Inline(
                     item.get("text"),
@@ -65,6 +84,7 @@ def from_dict(data):
                     item.get("annotation", ""),
                     item.get("target", ""),
                     item.get("boxed", True),
+                    item.get("seal_style", "red"),
                 )
             )
         parsed.append(
@@ -73,6 +93,12 @@ def from_dict(data):
                 b.get("kind", "paragraph"),
                 b.get("indent", 0),
                 b.get("level", 1),
+                b.get("style", ""),
+                (
+                    section_from_dict(b["section"])
+                    if b.get("section") is not None
+                    else None
+                ),
             )
         )
     raw_notes = data.get("annotations", [])
@@ -85,6 +111,16 @@ def from_dict(data):
             notes.append(Annotation(**note))
         except TypeError as e:
             raise BambooError(f"批注字段不完整: {e}") from e
+    raw_styles = data.get("styles", [])
+    if not isinstance(raw_styles, list):
+        raise BambooError("styles 必须是数组")
+    styles = []
+    for style in raw_styles:
+        _keys(style, {f.name for f in fields(TextStyle)}, "样式")
+        try:
+            styles.append(TextStyle(**style))
+        except TypeError as e:
+            raise BambooError(f"样式字段不完整: {e}") from e
     return Book(
         data.get("title", ""),
         tuple(parsed),
@@ -92,7 +128,17 @@ def from_dict(data):
         data.get("author", ""),
         profile,
         tuple(notes),
+        tuple(styles),
     )
+
+
+def section_from_dict(data):
+    _keys(data, {f.name for f in fields(SectionSpec)}, "篇章")
+    values = dict(data)
+    if values.get("profile") is not None:
+        _keys(values["profile"], {f.name for f in fields(Profile)}, "篇章版式")
+        values["profile"] = Profile(**values["profile"])
+    return SectionSpec(**values)
 
 
 def parse_inlines(text):

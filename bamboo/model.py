@@ -22,6 +22,7 @@ class Inline:
     annotation: str = ""
     target: str = ""
     boxed: bool = True
+    seal_style: str = "red"
 
     def __post_init__(self):
         if type(self.boxed) is not bool:
@@ -34,6 +35,7 @@ class Inline:
             "emphasis",
             "label",
             "numbered_note",
+            "seal",
         }:
             raise BambooError(f"未知行内类型: {self.kind}")
         if not isinstance(self.text, str) or not self.text:
@@ -59,10 +61,59 @@ class Inline:
             raise BambooError("只有编号注文可以设置 target")
         if self.kind == "label" and len(self.text) > 8:
             raise BambooError("带框标签最多 8 字")
+        if self.seal_style not in {"red", "white"}:
+            raise BambooError("印章样式应为 red 或 white")
+        if self.kind == "seal" and (
+            len(self.text) > 16 or any(c.isspace() for c in self.text)
+        ):
+            raise BambooError("文字印章需要 1 到 16 个非空白字")
         if self.kind == "ruby" and (len(self.text) > 8 or len(self.annotation) > 16):
             raise BambooError(
                 "原生短旁注最多锚定 8 字、注文 16 字；长批注应使用 annotations"
             )
+
+
+@dataclass(frozen=True)
+class TextStyle:
+    key: str
+    name: str
+    font_scale: float = 1
+    ink: str = ""
+    bold: bool = False
+    align: str = "start"
+    before: int = 0
+    after: int = 0
+    role: str = "paragraph"
+
+    def __post_init__(self):
+        if not isinstance(self.key, str) or not re.fullmatch(
+            r"[A-Za-z0-9_-]{1,64}", self.key
+        ):
+            raise BambooError("样式标识需要 1 到 64 个字母、数字、下划线或连字符")
+        if (
+            not isinstance(self.name, str)
+            or not self.name
+            or len(self.name) > 40
+            or any(ord(c) < 32 for c in self.name)
+        ):
+            raise BambooError("样式名称需要 1 到 40 个字")
+        if (
+            type(self.font_scale) not in (int, float)
+            or not math.isfinite(self.font_scale)
+            or not 0.35 <= self.font_scale <= 3
+        ):
+            raise BambooError("样式字号比例需要在 0.35 到 3 之间")
+        if not isinstance(self.ink, str) or (
+            self.ink and not re.fullmatch(r"#[0-9a-fA-F]{6}", self.ink)
+        ):
+            raise BambooError("样式颜色应为 #RRGGBB 或留空继承")
+        if type(self.bold) is not bool or self.align not in {"start", "center", "end"}:
+            raise BambooError("无效样式对齐或粗体设置")
+        for value in (self.before, self.after):
+            if type(value) is not int or not 0 <= value <= 4:
+                raise BambooError("样式段前段后留白应为 0 到 4 行栏")
+        if self.role not in {"paragraph", "heading", "commentary"}:
+            raise BambooError("未知样式语义类型")
 
 
 @dataclass(frozen=True)
@@ -71,6 +122,8 @@ class Block:
     kind: str = "paragraph"
     indent: int = 0
     level: int = 1
+    style: str = ""
+    section: SectionSpec | None = None
 
     def __post_init__(self):
         if not isinstance(self.kind, str) or self.kind not in {
@@ -84,6 +137,10 @@ class Block:
             raise BambooError("缩进必须是非负整数")
         if type(self.level) is not int or not 1 <= self.level <= 9:
             raise BambooError("层级 level 必须为 1 到 9 的整数")
+        if not isinstance(self.style, str):
+            raise BambooError("样式标识必须是字符串")
+        if self.section is not None and not isinstance(self.section, SectionSpec):
+            raise BambooError("篇章设置必须是 SectionSpec")
         object.__setattr__(self, "inlines", tuple(self.inlines))
         if self.kind == "pagebreak" and self.inlines:
             raise BambooError("分页符不能带正文")
@@ -122,6 +179,11 @@ class Profile:
     rule_color: str = "#4a4136"
     paper: str = "#ffffff"
     accent: str = "#9b3028"
+    border_color: str = ""
+    line_color: str = ""
+    fish_tail_color: str = ""
+    spine_ink: str = ""
+    show_author: bool = False
 
     def __post_init__(self):
         if self.writing_mode not in ("vertical-rl", "horizontal-tb"):
@@ -170,6 +232,7 @@ class Profile:
             "show_title",
             "show_volume",
             "show_page_number",
+            "show_author",
         ):
             if type(getattr(self, key)) is not bool:
                 raise BambooError(f"{key} 必须为布尔值")
@@ -190,6 +253,12 @@ class Profile:
                 r"#[0-9a-fA-F]{6}", getattr(self, key)
             ):
                 raise BambooError(f"{key} 必须是 #RRGGBB 颜色")
+        for key in ("border_color", "line_color", "fish_tail_color", "spine_ink"):
+            value = getattr(self, key)
+            if not isinstance(value, str) or (
+                value and not re.fullmatch(r"#[0-9a-fA-F]{6}", value)
+            ):
+                raise BambooError(f"{key} 应为 #RRGGBB 或留空继承")
         if (
             self.width > 14400
             or self.height > 14400
@@ -237,6 +306,43 @@ class Profile:
             return replace(self, **kwargs)
         except TypeError as e:
             raise BambooError(f"无效版式参数: {e}") from e
+
+
+@dataclass(frozen=True)
+class SectionSpec:
+    name: str = ""
+    profile: Profile | None = None
+    title: str | None = None
+    volume: str | None = None
+    author: str | None = None
+    page_type: str = "body"
+    cover_border: str = "double"
+    cover_width: float = 70
+    page_number_start: int | None = None
+
+    def __post_init__(self):
+        for key in ("name", "title", "volume", "author"):
+            value = getattr(self, key)
+            if value is not None and (
+                not isinstance(value, str) or any(ord(c) < 32 for c in value)
+            ):
+                raise BambooError("篇章文字不能包含控制字符")
+        if self.profile is not None and not isinstance(self.profile, Profile):
+            raise BambooError("无效篇章版式")
+        if self.page_type not in {"body", "title-slip"}:
+            raise BambooError("未知篇章页面类型")
+        if self.cover_border not in {"none", "single", "double"}:
+            raise BambooError("未知题签边框")
+        if (
+            type(self.cover_width) not in (int, float)
+            or not math.isfinite(self.cover_width)
+            or not 30 <= self.cover_width <= 240
+        ):
+            raise BambooError("题签宽度需要在 30 到 240pt 之间")
+        if self.page_number_start is not None and (
+            type(self.page_number_start) is not int or self.page_number_start < 1
+        ):
+            raise BambooError("篇章起始页码需要为正整数")
 
 
 PRESETS = {
@@ -337,6 +443,7 @@ class Book:
     author: str = ""
     profile: Profile = field(default_factory=Profile)
     annotations: Tuple[Annotation, ...] = ()
+    styles: Tuple[TextStyle, ...] = ()
 
     def __post_init__(self):
         for key in ("title", "volume", "author"):
@@ -352,8 +459,22 @@ class Book:
             raise BambooError("文档必须至少包含一个正文段落")
         if not isinstance(self.profile, Profile):
             raise BambooError("profile 必须是 Profile")
-        if any(b.indent >= self.profile.rows for b in self.blocks):
-            raise BambooError("缩进必须小于每栏字数")
+        object.__setattr__(self, "styles", tuple(self.styles))
+        if any(not isinstance(s, TextStyle) for s in self.styles) or len(
+            {s.key for s in self.styles}
+        ) != len(self.styles):
+            raise BambooError("文档样式标识必须唯一")
+        from .styles import style_registry
+
+        registry = style_registry(self)
+        profile = self.profile
+        for block in self.blocks:
+            if block.section and block.section.profile:
+                profile = block.section.profile
+            if block.indent >= profile.rows:
+                raise BambooError("缩进必须小于每栏字数")
+            if block.style and block.style not in registry:
+                raise BambooError(f"未知段落样式: {block.style}")
         ids = [
             i.target
             for b in self.blocks
@@ -390,6 +511,7 @@ class Glyph:
     color: str = "#24221f"
     annotation_id: str = ""
     reference_id: str = ""
+    bold: bool = False
 
 
 @dataclass(frozen=True)
@@ -430,6 +552,9 @@ class Page:
     lines: Tuple[Line, ...]
     polygons: Tuple[Polygon, ...]
     annotations: Tuple[AnnotationBox, ...] = ()
+    profile: Profile | None = None
+    section_index: int = 0
+    folio: int = 1
 
 
 @dataclass(frozen=True)
@@ -438,6 +563,7 @@ class Layout:
     pages: Tuple[Page, ...]
     warnings: Tuple[str, ...] = ()
     block_starts: Tuple[dict, ...] = ()
+    sections: Tuple[dict, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {"schema_version": 1, **asdict(self)}

@@ -117,8 +117,21 @@ class EditorApplication:
             identifier: sorted({o for o, _ in clusters(block.text)} | {len(block.text)})
             for identifier, block in zip(session.block_ids, session.book.blocks)
         }
+        from .styles import context_at, style_registry, page_style_presets
+
+        active = context_at(
+            session.book, session.block_ids.index(session.selection.focus.block_id)
+        )
+        state["view"]["styles"] = [
+            asdict(s) for s in style_registry(session.book).values()
+        ]
+        state["view"]["page_styles"] = [
+            [key, name] for key, (name, p) in page_style_presets().items()
+        ]
+        state["view"]["sections"] = layout.sections
+        state["view"]["section"] = asdict(active)
         state["view"]["preset"] = next(
-            (name for name, p in PRESETS.items() if p == session.book.profile), "custom"
+            (name for name, p in PRESETS.items() if p == active.profile), "custom"
         )
         state["view"]["numbered_notes"] = [
             {

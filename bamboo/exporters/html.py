@@ -7,11 +7,16 @@ from html import escape
 def export_html(layout, font, path):
     profile = layout.book.profile
     pages = []
+    page_styles = []
     for page in layout.pages:
+        page_profile = page.profile or profile
+        page_styles.append(
+            f"@page leaf{page.number}{{size:{page_profile.width}pt {page_profile.height}pt;margin:0}}"
+        )
         parts = [
-            f'<svg viewBox="0 0 {profile.width} {profile.height}" xmlns="http://www.w3.org/2000/svg" '
+            f'<svg viewBox="0 0 {page_profile.width} {page_profile.height}" xmlns="http://www.w3.org/2000/svg" '
             f'role="img" aria-label="{escape(layout.book.title, quote=True)} 第 {page.number} 葉">',
-            f'<rect width="{profile.width}" height="{profile.height}" fill="{profile.paper}"/>',
+            f'<rect width="{page_profile.width}" height="{page_profile.height}" fill="{page_profile.paper}"/>',
         ]
         for line in page.lines:
             parts.append(
@@ -23,13 +28,18 @@ def export_html(layout, font, path):
             parts.append(f'<polygon points="{points}" fill="{polygon.color}"/>')
         for glyph in page.glyphs:
             x, y = font.origin(glyph)
+            bold = (
+                f' stroke="{glyph.color}" stroke-width="{glyph.size*.022}" paint-order="stroke"'
+                if glyph.bold
+                else ""
+            )
             parts.append(
                 f'<text x="{x:.5f}" y="{y:.5f}" font-size="{glyph.size}" fill="{glyph.color}" '
-                f'data-source="{glyph.block}:{glyph.inline}:{glyph.offset}">{escape(glyph.text)}</text>'
+                f'data-source="{glyph.block}:{glyph.inline}:{glyph.offset}"{bold}>{escape(glyph.text)}</text>'
             )
         parts.append("</svg>")
         pages.append(
-            f'<section class="leaf" id="leaf-{page.number}" aria-label="第 {page.number} 葉">'
+            f'<section class="leaf" id="leaf-{page.number}" style="page:leaf{page.number};--print-width:{page_profile.width}pt;--print-height:{page_profile.height}pt" aria-label="第 {page.number} 葉">'
             + "".join(parts)
             + "</section>"
         )
@@ -96,8 +106,9 @@ details{{max-width:842px;margin:0 auto 48px;padding:20px 26px;background:#faf9f4
 summary{{cursor:pointer}}details h2{{font-size:18px}}small{{color:#6b675e}}em{{color:#9b3028;font-style:normal}}
 @media(max-width:900px){{:root{{--leaf-width:calc(100vw - 32px)}}main{{padding:24px 16px}}.toolbar{{padding:12px 16px;gap:10px}}}}
 @page{{size:{profile.width}pt {profile.height}pt;margin:0}}
-@media print{{body{{background:white}}header,.hint,details{{display:none}}main{{padding:0;overflow:visible}}.leaf{{width:{profile.width}pt;height:{profile.height}pt;margin:0;box-shadow:none;break-after:page}}.leaf:last-child{{break-after:auto}}.leaf.active{{outline:none}}}}
+@media print{{body{{background:white}}header,.hint,details{{display:none}}main{{padding:0;overflow:visible}}.leaf{{width:var(--print-width);height:var(--print-height);margin:0;box-shadow:none;break-after:page}}.leaf:last-child{{break-after:auto}}.leaf.active{{outline:none}}}}
 """
+    css += "\n".join(page_styles)
     js = """
 const leaves=[...document.querySelectorAll('.leaf')], picker=document.querySelector('#page');
 let current=0;

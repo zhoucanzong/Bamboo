@@ -101,7 +101,8 @@ def render(
                 # Guard accidental gigapixel allocations in configurable page sizes.
                 if (
                     docx_mode == "facsimile"
-                    and book.profile.width * book.profile.height * (dpi / 72) ** 2
+                    and max(p.profile.width * p.profile.height for p in layout.pages)
+                    * (dpi / 72) ** 2
                     > 50_000_000
                 ):
                     raise BambooError(
@@ -117,7 +118,7 @@ def render(
         manifest = {
             "schema_version": 1,
             "engine": "bamboo",
-            "engine_version": "0.4.0",
+            "engine_version": "0.5.0",
             "title": book.title,
             "pages": len(layout.pages),
             "units": "pt",

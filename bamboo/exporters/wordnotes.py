@@ -25,9 +25,11 @@ class NumberedNotes:
         self.count = 0
         self.pending = []
         self.num_id = None
+        self.numbering_key = None
 
     def numbering(self):
-        if self.num_id is not None:
+        key = (self.profile.font_size, self.profile.cell_advance)
+        if self.num_id is not None and self.numbering_key == key:
             return self.num_id
         root = self.doc.part.numbering_part.element
         abstract_id = (
@@ -48,7 +50,7 @@ class NumberedNotes:
         abstract.append(element("w:multiLevelType", val="singleLevel"))
         level = element("w:lvl", ilvl=0)
         for name, value in (
-            ("start", 1),
+            ("start", self.pending[0][1] if self.pending else 1),
             ("numFmt", "chineseCounting"),
             ("suff", "nothing"),
             ("lvlText", "【%1】"),
@@ -81,6 +83,7 @@ class NumberedNotes:
         num.append(element("w:abstractNumId", val=abstract_id))
         root.append(num)
         self.num_id = num_id
+        self.numbering_key = key
         return num_id
 
     def reference(self, paragraph, inline):

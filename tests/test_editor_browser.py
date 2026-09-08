@@ -244,3 +244,66 @@ def test_numbered_note_dialog_and_reference_editing(editor):
         if i.kind == "numbered_note"
     )
     assert note.text == "修訂後的注文" and not note.boxed
+
+
+def test_styles_cover_chapters_and_seals_in_ui(editor):
+    page, app, folder, expect, url = editor
+    page.locator(".page svg").click(position={"x": 430, "y": 80})
+    page.keyboard.insert_text("讀書養心")
+    expect(page.locator("#word-count")).to_have_text("4 字")
+    page.locator("#text-style").select_option("poetry")
+    expect(page.locator("body")).to_have_attribute("data-revision", "2")
+    page.keyboard.press("Shift+Enter")
+    page.keyboard.insert_text("明理致知")
+    expect(page.locator("#word-count")).to_have_text("9 字")
+    assert len(current(app).book.blocks) == 1
+    page.locator("#styles").click()
+    page.locator("#modal-font_scale").fill("0.8")
+    page.locator("#modal-ink").fill("#b32624")
+    page.locator("#modal-form button[type=submit]").click()
+    expect(page.locator("#save-status")).to_have_text("已自动保存")
+    expect(page.locator("#modal")).not_to_be_visible()
+    page.locator("#chapter").click()
+    page.locator("#modal-name").fill("詩文")
+    page.locator("#modal-preset").select_option("poetry-page")
+    page.locator("#modal-form button[type=submit]").click()
+    expect(page.locator("#section-name")).to_have_text("当前篇章：詩文")
+    page.locator("#seal").click()
+    page.locator("#modal-seal_style").select_option("white")
+    page.locator("#modal-form button[type=submit]").click()
+    expect(page.locator("#word-count")).to_have_text("13 字")
+    assert current(app).book.blocks[0].inlines[-1].kind == "seal"
+    page.locator("#cover").click()
+    page.locator("#modal-title").fill("竹簡讀書集")
+    page.locator("#modal-form button[type=submit]").click()
+    expect(page.locator("#page-count")).to_have_text("2 页")
+    expect(page.locator("#issues")).not_to_be_visible()
+    page.reload()
+    expect(page.locator("#page-count")).to_have_text("2 页")
+    assert current(app).book.blocks[0].section.page_type == "title-slip"
+    page.screenshot(path=str(folder / "styles-editor.png"))
+
+
+def test_style_sample_opens_as_editable_and_prints_mixed_sizes(editor):
+    page, app, folder, expect, url = editor
+    sample = Path(__file__).resolve().parents[1] / "examples/styles.json"
+    page.locator("#file").set_input_files(str(sample))
+    expect(page.locator("#page-count")).to_have_text("4 页")
+    expect(page.locator("#issues")).not_to_be_visible()
+    assert len(current(app).book.blocks) == 18
+    page.locator("#zoom").select_option("0.8")
+    page.screenshot(path=str(folder / "styles-sample-editor.png"))
+    from bamboo import render
+    import fitz
+
+    result = render(current(app).book, folder / "export", formats=("html",))
+    page.goto(Path(result.files["html"]).as_uri())
+    page.evaluate("document.fonts.ready")
+    pdf = folder / "printed.pdf"
+    page.pdf(path=str(pdf), prefer_css_page_size=True, print_background=True)
+    with fitz.open(pdf) as printed:
+        assert len(printed) == 4
+        assert [(round(p.rect.width), round(p.rect.height)) for p in printed] == [
+            (round(p.profile.width), round(p.profile.height))
+            for p in current(app).layout().pages
+        ]

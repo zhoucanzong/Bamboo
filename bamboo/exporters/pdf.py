@@ -12,6 +12,7 @@ def pdf_document(layout, font):
     profile = layout.book.profile
     toc, heading_seen = [], set()
     for leaf in layout.pages:
+        profile = leaf.profile or layout.book.profile
         page = doc.new_page(width=profile.width, height=profile.height)
         page.draw_rect(page.rect, color=None, fill=rgb(profile.paper))
         page.insert_font(fontname="Bamboo", fontbuffer=font.data)
@@ -34,6 +35,8 @@ def pdf_document(layout, font):
                 fontname="Bamboo",
                 fontsize=glyph.size,
                 color=rgb(glyph.color),
+                render_mode=2 if glyph.bold else 0,
+                border_width=0.022 if glyph.bold else 0.05,
             )
             if glyph.role == "heading" and glyph.block not in heading_seen:
                 heading_seen.add(glyph.block)

@@ -31,6 +31,7 @@ def import_plain_text(text, title="未命名文档", profile=None):
 def import_docx(data):
     warnings = []
     saved_profile = None
+    saved_book = None
     try:
         with zipfile.ZipFile(BytesIO(data)) as archive:
             if sum(i.file_size for i in archive.infolist()) > 100_000_000:
@@ -44,7 +45,10 @@ def import_docx(data):
                         ).text
                     )
                     saved_profile = Profile(**snapshot["profile"])
-                except (ValueError, TypeError, KeyError):
+                    from .parser import from_dict
+
+                    saved_book = from_dict(snapshot)
+                except (ValueError, TypeError, KeyError, BambooError):
                     pass
             notes = {}
             if "word/footnotes.xml" in archive.namelist():
@@ -198,6 +202,32 @@ def import_docx(data):
                 if text:
                     spans.append(Inline(text, "footnote"))
             elif child.tag in {qn("w:pict"), qn("w:drawing")}:
+                seal = next(
+                    (
+                        shape
+                        for shape in child.iter()
+                        if (shape.get("id") or "").startswith("BambooSeal")
+                    ),
+                    None,
+                )
+                if seal is not None:
+                    flush()
+                    text = "".join(t.text or "" for t in seal.iter(qn("w:t")))
+                    if text:
+                        try:
+                            spans.append(
+                                Inline(
+                                    text,
+                                    "seal",
+                                    seal_style=(
+                                        "white" if seal.get("filled") == "t" else "red"
+                                    ),
+                                )
+                            )
+                        except BambooError:
+                            spans.append(Inline(text))
+                            warnings.append("印文超出方印容量，已保留为普通文字。")
+                    continue
                 for box in child.iter(qn("w:txbxContent")):
                     text = "".join(t.text or "" for t in box.iter(qn("w:t")))
                     if text:
@@ -215,6 +245,68 @@ def import_docx(data):
                 return [Inline(text, "numbered_note", label, target, boxed)]
         return [span for run in runs for span in read_run(run)]
 
+    from .model import SectionSpec
+    from .styles import context_at, style_registry
+
+    native_sections = list(doc.sections)
+    section_index = 0
+    used_sections = set()
+    registry = style_registry(saved_book) if saved_book else {}
+    native_styles = {
+        s.style_id: s.name[9:] for s in doc.styles if s.name.startswith("Bamboo S ")
+    }
+
+    def original_index(element):
+        for b in element.iter(qn("w:bookmarkStart")):
+            name = b.get(qn("w:name"), "")
+            if re.fullmatch(r"BambooBlock\d+", name):
+                return int(name[11:])
+        return None
+
+    def adapted(block, index, si, cover=False):
+        # Source metadata supplies style definitions only; all text above is live OOXML.
+        source = (
+            saved_book.blocks[index]
+            if saved_book and index is not None and index < len(saved_book.blocks)
+            else None
+        )
+        if source:
+            block = replace(
+                block,
+                style=source.style if source.style in registry else "",
+                indent=source.indent,
+                level=source.level,
+            )
+        if si not in used_sections:
+            used_sections.add(si)
+            if len(native_sections) > 1 or (source and source.section):
+                spec = (
+                    context_at(saved_book, index)
+                    if source
+                    else SectionSpec(profile=profile)
+                )
+                native = native_sections[si]
+                direction = native._sectPr.find(qn("w:textDirection"))
+                mode = (
+                    "vertical-rl"
+                    if direction is not None
+                    and direction.get(qn("w:val")) in {"tbRl", "tbRlV"}
+                    else "horizontal-tb"
+                )
+                try:
+                    active = spec.profile.updated(
+                        width=native.page_width.pt,
+                        height=native.page_height.pt,
+                        writing_mode=mode,
+                    )
+                except BambooError:
+                    active = profile
+                spec = replace(
+                    spec, profile=active, page_type="title-slip" if cover else "body"
+                )
+                block = replace(block, section=spec)
+        return block
+
     for element in doc._element.body:
         if element.tag == qn("w:tbl"):
             warnings.append("表格文字已按行导入；表格几何结构暂未导入。")
@@ -231,7 +323,47 @@ def import_docx(data):
                 warnings.append("部分结构化控件尚未导入，请核对原文件。")
             continue
         pp = element.find(qn("w:pPr"))
-        kind, level = "paragraph", 1
+        si = section_index
+        ends_section = pp is not None and pp.find(qn("w:sectPr")) is not None
+        if ends_section:
+            section_index = min(section_index + 1, len(native_sections) - 1)
+        cover = next(
+            (
+                shape
+                for shape in element.iter()
+                if re.fullmatch(r"BambooCover\d+", shape.get("id") or "")
+            ),
+            None,
+        )
+        if cover is not None:
+            for pe in cover.iter(qn("w:p")):
+                active = None
+                cover_spans = []
+                for node in pe:
+                    if node.tag == qn("w:bookmarkStart") and re.fullmatch(
+                        r"BambooBlock\d+", node.get(qn("w:name"), "")
+                    ):
+                        active = int(node.get(qn("w:name"))[11:])
+                        cover_spans = []
+                    elif node.tag == qn("w:r") and active is not None:
+                        cover_spans.extend(read_run(node))
+                    elif node.tag == qn("w:bookmarkEnd") and active is not None:
+                        kind = "heading" if not blocks else "paragraph"
+                        blocks.append(
+                            adapted(Block(tuple(cover_spans), kind), active, si, True)
+                        )
+                        active = None
+            if not any(t.text for t in cover.iter(qn("w:t"))):
+                blocks.append(adapted(Block(), None, si, True))
+            elif not blocks:
+                text = "".join(t.text or "" for t in cover.iter(qn("w:t")))
+                blocks.append(
+                    adapted(Block((Inline(text),), "heading"), None, si, True)
+                )
+            continue
+        if ends_section and not any(t.text for t in element.iter(qn("w:t"))):
+            continue
+        kind, level, style_key = "paragraph", 1, ""
         if pp is not None:
             style = pp.find(qn("w:pStyle"))
             name = style.get(qn("w:val"), "") if style is not None else ""
@@ -240,6 +372,9 @@ def import_docx(data):
                 for n in element.findall(qn("w:bookmarkStart"))
             ):
                 continue
+            if name in native_styles and native_styles[name] in registry:
+                style_key = native_styles[name]
+                kind = registry[style_key].role
             if name.lower().startswith("heading") and name[-1:].isdigit():
                 kind, level = "heading", max(1, int(name[-1]))
             elif name == "BambooCommentary":
@@ -292,7 +427,13 @@ def import_docx(data):
                 )
         if field_runs:
             spans.extend(span for run in field_runs for span in read_run(run))
-        blocks.append(Block(tuple(spans), kind, level=level))
+        blocks.append(
+            adapted(
+                Block(tuple(spans), kind, level=level, style=style_key),
+                original_index(element),
+                si,
+            )
+        )
         for text in floating:
             blocks.append(Block((Inline(text),), "commentary"))
         if floating:
@@ -304,6 +445,7 @@ def import_docx(data):
         author=doc.core_properties.author or "",
         volume="",
         profile=profile,
+        styles=saved_book.styles if saved_book else (),
     )
     remaining = [
         (
@@ -327,7 +469,12 @@ def import_document(data, filename):
         return import_docx(data)
     if filename.lower().endswith(".json"):
         try:
-            return EditorSession.restore(json.loads(data.decode("utf-8-sig"))), []
+            parsed = json.loads(data.decode("utf-8-sig"))
+            if isinstance(parsed, dict) and "editor_schema" in parsed:
+                return EditorSession.restore(parsed), []
+            from .parser import from_dict
+
+            return EditorSession(from_dict(parsed)), []
         except (ValueError, KeyError, TypeError) as e:
             raise BambooError(f"无法恢复编辑文档: {e}") from e
     try:

@@ -15,7 +15,16 @@ import threading
 import uuid
 
 from .layout import clusters, compose
-from .model import Annotation, BambooError, Block, Book, Inline, PRESETS
+from .model import (
+    Annotation,
+    BambooError,
+    Block,
+    Book,
+    Inline,
+    PRESETS,
+    SectionSpec,
+    TextStyle,
+)
 from .parser import from_dict
 
 
@@ -157,7 +166,7 @@ class EditorSession:
     def _collapse(draft, pos):
         draft["selection"] = Selection(pos, pos)
 
-    def _replace_text(self, draft, command, text):
+    def _replace_text(self, draft, command, text, *, soft=False):
         if not isinstance(text, str) or any(
             ord(c) < 32 and c not in "\n\r\t" for c in text
         ):
@@ -186,13 +195,15 @@ class EditorSession:
                     new = list(first.inlines)
                     new[ii : ii + 1] = [replace(span, text=value)] if value else []
                     draft["blocks"][ai] = replace(first, inlines=_normalize(new))
-                    self._remap_notes(draft, a, b, ai, bi, text, [a.block_id])
+                    self._remap_notes(
+                        draft, a, b, ai, bi, text, [a.block_id], soft=soft
+                    )
                     self._collapse(draft, Position(a.block_id, a.offset + len(text)))
                     return
                 offset = limit
         prefix = _slice(first.inlines, 0, a.offset)
         suffix = _slice(last.inlines, b.offset, len(last.text))
-        pieces = text.split("\n")
+        pieces = [text] if soft else text.split("\n")
         ids = [a.block_id] + [_id() for _ in pieces[1:]]
         blocks = []
         for i, value in enumerate(pieces):
@@ -204,19 +215,22 @@ class EditorSession:
             block = (
                 replace(first, inlines=_normalize(spans))
                 if i == 0
-                else Block(_normalize(spans))
+                else Block(
+                    _normalize(spans),
+                    style=first.style if first.kind == "paragraph" else "",
+                )
             )
             blocks.append(block)
-        self._remap_notes(draft, a, b, ai, bi, text, ids)
+        self._remap_notes(draft, a, b, ai, bi, text, ids, soft=soft)
         draft["blocks"][ai : bi + 1] = blocks
         draft["ids"][ai : bi + 1] = ids
         cursor = a.offset + len(text) if len(pieces) == 1 else len(pieces[-1])
         self._collapse(draft, Position(ids[-1], cursor))
 
     @staticmethod
-    def _remap_notes(draft, a, b, ai, bi, text, new_ids):
+    def _remap_notes(draft, a, b, ai, bi, text, new_ids, *, soft=False):
         removed_ids = set(draft["ids"][ai : bi + 1])
-        pieces = text.split("\n")
+        pieces = [text] if soft else text.split("\n")
         result = []
         for record in draft["notes"]:
             n = dict(record)
@@ -262,6 +276,7 @@ class EditorSession:
                 command.get("annotation", ""),
                 (command.get("target") or _id()) if kind == "numbered_note" else "",
                 command.get("boxed", True),
+                command.get("seal_style", "red"),
             )
             draft["blocks"][index] = replace(
                 block, inlines=_normalize(prefix + [formatted] + suffix)
@@ -278,6 +293,8 @@ class EditorSession:
             draft["selection"] = Selection(a, b)
         if kind in {"insert_text", "replace_range"}:
             self._replace_text(draft, command, command.get("text", ""))
+        elif kind == "insert_linebreak":
+            self._replace_text(draft, command, "\n", soft=True)
         elif kind == "split_paragraph":
             self._replace_text(draft, command, "\n")
         elif kind in {"delete_backward", "delete_forward"}:
@@ -348,6 +365,7 @@ class EditorSession:
                     ),
                     "annotation": command.get("annotation", ""),
                     "boxed": command.get("boxed", True),
+                    "seal_style": command.get("seal_style", "red"),
                     "selection": {"anchor": asdict(a), "focus": asdict(end)},
                 },
             )
@@ -392,22 +410,24 @@ class EditorSession:
             )
             values = command.get("values", {})
             if (
-                set(values) - {"kind", "indent", "level"}
+                set(values) - {"kind", "indent", "level", "style"}
                 or values.get("kind") == "pagebreak"
             ):
                 raise BambooError("无效段落属性")
             draft["blocks"][index] = replace(draft["blocks"][index], **values)
         elif kind == "set_profile":
+            current, section_index = self._draft_context(draft)
             if command.get("preset"):
                 if command["preset"] not in PRESETS:
                     raise BambooError("未知版式")
                 profile = PRESETS[command["preset"]]
             else:
-                profile = draft["book"].profile.updated(**command.get("values", {}))
-            draft["book"] = replace(draft["book"], profile=profile)
+                profile = current.profile.updated(**command.get("values", {}))
+            self._set_draft_profile(draft, profile, section_index, command.get("scope"))
         elif kind == "set_direction":
             mode = command.get("writing_mode")
-            p = draft["book"].profile
+            current, section_index = self._draft_context(draft)
+            p = current.profile
             if mode not in {"vertical-rl", "horizontal-tb"}:
                 raise BambooError("无效文字方向")
             if mode != p.writing_mode:
@@ -425,10 +445,105 @@ class EditorSession:
                 columns = min(
                     p.columns, max(1, math.floor(cross_extent * 0.8 / p.font_size))
                 )
-                draft["book"] = replace(
-                    draft["book"],
-                    profile=p.updated(writing_mode=mode, rows=rows, columns=columns),
+                self._set_draft_profile(
+                    draft,
+                    p.updated(writing_mode=mode, rows=rows, columns=columns),
+                    section_index,
+                    command.get("scope"),
                 )
+        elif kind == "apply_style":
+            from .styles import style_registry
+
+            key = command.get("style")
+            registry = style_registry(draft["book"])
+            if key not in registry:
+                raise BambooError("未知文字样式")
+            ai, _, bi, _ = self._range(draft, command)
+            for i in range(ai, bi + 1):
+                if draft["blocks"][i].kind != "pagebreak":
+                    draft["blocks"][i] = replace(
+                        draft["blocks"][i], style=key, kind=registry[key].role
+                    )
+        elif kind == "define_style":
+            from .styles import style_registry
+
+            values = command.get("values", {})
+            key = values.get("key")
+            current = style_registry(draft["book"]).get(key)
+            try:
+                style = replace(current, **values) if current else TextStyle(**values)
+            except TypeError as e:
+                raise BambooError(f"无效样式属性: {e}") from e
+            draft["book"] = replace(
+                draft["book"],
+                styles=tuple(s for s in draft["book"].styles if s.key != style.key)
+                + (style,),
+            )
+        elif kind == "set_section":
+            from .styles import page_style_presets
+
+            current, active = self._draft_context(draft)
+            index = (
+                draft["ids"].index(draft["selection"].focus.block_id)
+                if command.get("new")
+                else (active if active is not None else 0)
+            )
+            values = dict(command.get("values", {}))
+            if command.get("preset"):
+                presets = page_style_presets()
+                if command["preset"] not in presets:
+                    raise BambooError("未知篇章版式")
+                label, profile = presets[command["preset"]]
+                values["profile"] = profile
+                values.setdefault("name", label)
+            elif isinstance(values.get("profile"), dict):
+                values["profile"] = current.profile.updated(**values["profile"])
+            try:
+                spec = replace(current, **values)
+            except TypeError as e:
+                raise BambooError(f"无效篇章属性: {e}") from e
+            draft["blocks"][index] = replace(draft["blocks"][index], section=spec)
+        elif kind == "clear_section":
+            _, active = self._draft_context(draft)
+            if active is not None:
+                draft["blocks"][active] = replace(draft["blocks"][active], section=None)
+        elif kind == "insert_cover":
+            title = command.get("title") or draft["book"].title
+            subtitle = command.get("subtitle", "")
+            base = draft["book"].profile
+            cover_profile = base.updated(
+                writing_mode="vertical-rl",
+                columns=10,
+                rows=20,
+                spine=0,
+                rules=False,
+                fish_tail=False,
+                border="none",
+                paper="#ffffff",
+            )
+            spec = SectionSpec(
+                name="封面",
+                profile=cover_profile,
+                page_type="title-slip",
+                cover_border=command.get("border", "double"),
+                cover_width=command.get("width", 70),
+            )
+            cover = [
+                Block(
+                    (Inline(title),), kind="heading", style="cover-title", section=spec
+                )
+            ]
+            if subtitle:
+                cover.append(Block((Inline(subtitle),), style="cover-subtitle"))
+            if draft["blocks"][0].section is None:
+                draft["blocks"][0] = replace(
+                    draft["blocks"][0],
+                    section=SectionSpec(name="正文", profile=base, page_number_start=1),
+                )
+            ids = [_id() for _ in cover]
+            draft["blocks"][:0] = cover
+            draft["ids"][:0] = ids
+            self._collapse(draft, Position(ids[0], len(title)))
         elif kind == "set_metadata":
             values = command.get("values", {})
             if set(values) - {"title", "volume", "author"}:
@@ -456,6 +571,32 @@ class EditorSession:
             draft["notes"].pop(index)
         else:
             raise BambooError(f"未知编辑命令: {kind}")
+
+    @staticmethod
+    def _draft_context(draft):
+        from .styles import section_ranges
+
+        # Geometry context needs only the blocks, not re-indexed annotations.
+        book = replace(draft["book"], blocks=tuple(draft["blocks"]), annotations=())
+        index = draft["ids"].index(draft["selection"].focus.block_id)
+        current = next(
+            spec for begin, end, spec in section_ranges(book) if begin <= index < end
+        )
+        active = next(
+            (i for i in range(index, -1, -1) if draft["blocks"][i].section is not None),
+            None,
+        )
+        return current, active
+
+    @staticmethod
+    def _set_draft_profile(draft, profile, index, scope=None):
+        if scope == "document" or index is None:
+            draft["book"] = replace(draft["book"], profile=profile)
+        else:
+            b = draft["blocks"][index]
+            draft["blocks"][index] = replace(
+                b, section=replace(b.section, profile=profile)
+            )
 
     @staticmethod
     def _finish(draft):
@@ -533,10 +674,14 @@ class EditorSession:
                 blocks = tuple(
                     replace(
                         b,
+                        style="",
+                        section=(
+                            replace(b.section, page_type="body") if b.section else None
+                        ),
                         inlines=tuple(
                             (
                                 Inline(i.text)
-                                if i.kind in {"ruby", "label"}
+                                if i.kind in {"ruby", "label", "seal"}
                                 else (
                                     replace(i, annotation="", boxed=False)
                                     if i.kind == "numbered_note"
@@ -548,7 +693,9 @@ class EditorSession:
                     )
                     for b in self.book.blocks
                 )
-                result = compose(replace(self.book, blocks=blocks, annotations=()))
+                result = compose(
+                    replace(self.book, blocks=blocks, annotations=(), styles=())
+                )
             fingerprints = tuple(
                 hashlib.sha256(
                     json.dumps(asdict(p), ensure_ascii=False, sort_keys=True).encode()
@@ -589,7 +736,7 @@ class EditorSession:
             dy = max(g.y - y, 0, y - g.y - g.height)
             after = (
                 y > g.y + g.height / 2
-                if self.book.profile.vertical
+                if (self.layout().pages[page].profile or self.book.profile).vertical
                 else x > g.x + g.width / 2
             )
             candidates.append(
@@ -628,7 +775,7 @@ class EditorSession:
             page, g, _, _ = exact
             x, y, width, height = g.x, g.y, g.width, g.height
             if after:
-                if self.book.profile.vertical:
+                if (self.layout().pages[page].profile or self.book.profile).vertical:
                     y += height
                 else:
                     x += width
@@ -638,7 +785,7 @@ class EditorSession:
             page, x, y, width, height = (
                 start[k] for k in ("page", "x", "y", "width", "height")
             )
-        if self.book.profile.vertical:
+        if (self.layout().pages[page].profile or self.book.profile).vertical:
             return {
                 "page": page,
                 "x1": x + width * 0.15,

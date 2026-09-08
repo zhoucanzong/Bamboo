@@ -6,7 +6,7 @@ owns reflow; source page breaks are the only explicit pagination instructions.
 
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_LINE_SPACING
-from docx.enum.section import WD_ORIENT
+from docx.enum.section import WD_ORIENT, WD_SECTION_START
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn, nsmap
 from docx.shared import Pt, RGBColor
@@ -154,7 +154,14 @@ def _run(
 
 
 def _text(paragraph, text, font, p, size, color):
-    chars = [c for _, c in clusters(text) if c not in "\n\r\t"]
+    if "\n" in text:
+        for i, line in enumerate(text.split("\n")):
+            if i:
+                paragraph.add_run().add_break()
+            if line:
+                _text(paragraph, line, font, p, size, color)
+        return
+    chars = [c for _, c in clusters(text) if c not in "\r\t"]
     if p.punctuation == "hide":
         _run(
             paragraph,
@@ -332,12 +339,18 @@ class Footnotes:
         self.doc.part.relate_to(part, RT.FOOTNOTES)
 
 
-def write_flow(doc, layout, font):
+def write_flow(doc, layout, font, decorate=None):
     from .wordnotes import NumberedNotes, boxed_label
 
     p = layout.book.profile
     _styles(doc, font, p)
-    _section(doc.sections[0], p)
+    from ..styles import section_ranges, resolve_style
+    from .wordstyles import register_styles, format_paragraph, write_cover, inline_seal
+
+    register_styles(doc, layout.book, font)
+    ranges = section_ranges(layout.book)
+    boundaries = {begin: (end, spec) for begin, end, spec in ranges}
+    covers = set()
     footnotes = Footnotes(doc, font, p)
     numbered = NumberedNotes(doc, font, p)
     pending_break = False
@@ -357,6 +370,35 @@ def write_flow(doc, layout, font):
                 paragraph_glyphs.setdefault(g.block, g)
     shape_id = 30000
     for bi, block in enumerate(layout.book.blocks):
+        if bi in boundaries:
+            end, spec = boundaries[bi]
+            p = spec.profile
+            section = (
+                doc.sections[0]
+                if bi == 0
+                else doc.add_section(WD_SECTION_START.NEW_PAGE)
+            )
+            _section(section, p)
+            if bi > 0:
+                section.header.is_linked_to_previous = False
+                section.footer.is_linked_to_previous = False
+            if spec.page_number_start is not None:
+                section._sectPr.find(qn("w:pgNumType")).set(
+                    qn("w:start"), str(spec.page_number_start)
+                )
+            else:
+                section._sectPr.find(qn("w:pgNumType")).attrib.pop(qn("w:start"), None)
+            pending_break = False
+            previous = None
+            footnotes.profile = p
+            numbered.profile = p
+            if spec.page_type == "title-slip":
+                write_cover(doc, layout.book, bi, end, spec, font, layout)
+                covers.update(range(bi, end))
+            elif decorate is not None:
+                decorate(section, bi, end, spec)
+        if bi in covers:
+            continue
         if block.kind == "pagebreak":
             pending_break = previous is not None
             continue
@@ -365,7 +407,12 @@ def write_flow(doc, layout, font):
             if block.kind == "heading"
             else "Bamboo Commentary" if block.kind == "commentary" else "Normal"
         )
+        resolved = resolve_style(layout.book, block)
+        if block.style:
+            style = "Bamboo S " + block.style
         paragraph = doc.add_paragraph(style=style)
+        format_paragraph(paragraph, resolved, p)
+        paragraph.style.font.bold = resolved.bold
         if block.kind == "commentary" and previous is not None and not pending_break:
             previous.paragraph_format.keep_with_next = True
         paragraph.paragraph_format.page_break_before = pending_break
@@ -380,9 +427,9 @@ def write_flow(doc, layout, font):
         pp.append(element("w:kinsoku", val="1" if p.punctuation == "keep" else "0"))
         start = element("w:bookmarkStart", id=bi + 100, name=f"BambooBlock{bi}")
         paragraph._element.append(start)
-        size = p.font_size * (0.75 if block.kind == "commentary" else 1)
+        size = p.font_size * resolved.font_scale
         for ii, inline in enumerate(block.inlines):
-            color = p.accent if inline.kind == "emphasis" else p.ink
+            color = p.accent if inline.kind == "emphasis" else (resolved.ink or p.ink)
             if inline.kind == "note":
                 note_id += 1
                 _run(
@@ -400,6 +447,9 @@ def write_flow(doc, layout, font):
                 _ruby(paragraph, inline, font, p, size)
             elif inline.kind == "numbered_note":
                 numbered.reference(paragraph, inline)
+            elif inline.kind == "seal":
+                inline_seal(paragraph, inline, font, p, shape_id)
+                shape_id += 1
             elif inline.kind == "label":
                 boxed_label(
                     paragraph,
