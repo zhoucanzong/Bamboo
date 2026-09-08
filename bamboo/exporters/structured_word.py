@@ -96,6 +96,9 @@ def write_structured(doc, layout, font):
     for pi, page in enumerate(layout.pages):
         first = True
         for widget in page.widgets:
+            if widget["kind"] == "graph":
+                graph(doc, widget, font, p)
+                continue
             if widget["kind"] == "table":
                 table(doc, widget, font, p, layout.book.special.kind)
                 continue
@@ -113,13 +116,15 @@ def write_structured(doc, layout, font):
 
 
 def import_structured(doc, saved):
-    from ..structured import GiftRecord, GiftLedger
+    from ..structured import GiftRecord, GiftLedger, FamilyPerson, Genealogy
     from ..editor import EditorSession
     from ..model import Book, Block, BambooError
 
-    if not isinstance(saved.special, GiftLedger):
+    if not isinstance(saved.special, (GiftLedger, Genealogy)):
         return None
+    kind = saved.special.kind
     values = {}
+    diagram_names = {}
     order = []
     title = None
     for sdt in doc._element.body.iter(qn("w:sdt")):
@@ -133,9 +138,23 @@ def import_structured(doc, saved):
         )
         if key == "bamboo:meta:title":
             title = title or value
-        if key.startswith("bamboo:gift:"):
+        if key.startswith("bamboo:" + kind + ":"):
             _, _, record, field = key.split(":")
-            if field not in {"name", "amount", "gift", "date", "note"}:
+            if field == "diagram_name":
+                diagram_names[record] = value
+                continue
+            if field not in {
+                "name",
+                "amount",
+                "gift",
+                "date",
+                "note",
+                "parents",
+                "spouses",
+                "birth",
+                "death",
+                "biography",
+            }:
                 continue
             if record not in values:
                 values[record] = {}
@@ -149,13 +168,51 @@ def import_structured(doc, saved):
             local = []
             for node in t._tbl.iter(qn("w:tag")):
                 key = node.get(qn("w:val"), "")
-                if key.startswith("bamboo:gift:"):
+                if key.startswith("bamboo:" + kind + ":"):
                     record = key.split(":")[2]
                     if record not in local:
                         local.append(record)
             order.extend(reversed(local))
     try:
-        records = tuple(GiftRecord(id=i, **values[i]) for i in order)
+        if kind == "gift":
+            records = tuple(GiftRecord(id=i, **values[i]) for i in order)
+        else:
+            import re
+
+            def relatives(value):
+                if not value:
+                    return ()
+                result = []
+                for label in value.split("；"):
+                    match = re.match(r"^(\d+)\s+", label)
+                    if not match:
+                        raise BambooError("亲属编号未能识别")
+                    index = int(match.group(1))
+                    if not 1 <= index <= len(saved.special.records):
+                        raise BambooError("亲属编号超出范围")
+                    result.append(saved.special.records[index - 1].id)
+                return tuple(result)
+
+            original = {r.id: r.name for r in saved.special.records}
+            for record, diagram_name in diagram_names.items():
+                if record in values and diagram_name != original.get(record):
+                    if values[record]["name"] not in {
+                        original.get(record),
+                        diagram_name,
+                    }:
+                        raise BambooError("人物图框与传记姓名修改冲突")
+                    values[record]["name"] = diagram_name
+            records = tuple(
+                FamilyPerson(
+                    id=i,
+                    **{
+                        **values[i],
+                        "parents": relatives(values[i].get("parents", "")),
+                        "spouses": relatives(values[i].get("spouses", "")),
+                    },
+                )
+                for i in order
+            )
         special = replace(saved.special, records=records)
         book = Book(
             title or doc.core_properties.title or saved.title,
@@ -166,7 +223,82 @@ def import_structured(doc, saved):
             special=special,
         )
         return EditorSession(book), [
-            "礼簿已按 Word 中的实际记录导入，金额大写与合计已重新计算。"
+            "专用文档已按 Word 中的实际记录字段恢复，派生内容会重新计算。"
         ]
-    except (BambooError, TypeError, KeyError):
+    except (BambooError, TypeError, KeyError, IndexError):
         return None
+
+
+def graph(doc, widget, font, p):
+    from lxml import etree
+    from docx.text.paragraph import Paragraph
+
+    anchor = doc.add_paragraph()
+    anchor.paragraph_format.space_before = anchor.paragraph_format.space_after = Pt(0)
+    anchor.paragraph_format.line_spacing = Pt(widget["height"])
+    v = "urn:schemas-microsoft-com:vml"
+    for index, line in enumerate(widget["lines"]):
+        pict = element("w:pict")
+        shape = etree.SubElement(
+            pict,
+            "{" + v + "}rect",
+            id=f"JianduLink{len(doc.paragraphs)}_{index}",
+            stroked="f",
+            filled="t",
+            fillcolor=line["color"],
+        )
+        left = min(line["x1"], line["x2"])
+        top = min(line["y1"], line["y2"])
+        width = max(line["width"], abs(line["x2"] - line["x1"]))
+        height = max(line["width"], abs(line["y2"] - line["y1"]))
+        shape.set(
+            "style",
+            f"position:absolute;margin-left:{left}pt;margin-top:{top}pt;width:{width}pt;height:{height}pt;mso-position-horizontal-relative:page;mso-position-vertical-relative:page;z-index:1",
+        )
+        anchor.add_run()._r.append(pict)
+    for node in widget["nodes"]:
+        pict = element("w:pict")
+        shape = etree.SubElement(
+            pict,
+            "{" + v + "}rect",
+            id="JianduPerson" + node.get("record", "empty"),
+            strokecolor=p.rule_color,
+            strokeweight=".8pt",
+            fillcolor=p.paper,
+        )
+        shape.set(
+            "style",
+            f'position:absolute;margin-left:{node["x"]}pt;margin-top:{node["y"]}pt;width:{node["width"]}pt;height:{node["height"]}pt;mso-position-horizontal-relative:page;mso-position-vertical-relative:page;z-index:2',
+        )
+        box = etree.SubElement(
+            shape,
+            "{" + v + "}textbox",
+            inset="4pt,4pt,4pt,4pt",
+            style="layout-flow:vertical" if node["vertical"] else "",
+        )
+        content = element("w:txbxContent")
+        box.append(content)
+        pe = element("w:p")
+        content.append(pe)
+        para = Paragraph(pe, anchor._parent)
+        para.paragraph_format.space_before = para.paragraph_format.space_after = Pt(0)
+        para.paragraph_format.line_spacing = Pt(node["size"] * 1.35)
+        if node.get("name"):
+            tagged(
+                para,
+                node["name"],
+                font,
+                node["size"],
+                node["color"],
+                f'bamboo:genealogy:{node["record"]}:diagram_name',
+            )
+            tagged(
+                para,
+                node["text"][len(node["name"]) :],
+                font,
+                node["size"],
+                node["color"],
+            )
+        else:
+            tagged(para, node["text"], font, node["size"], node["color"])
+        anchor.add_run()._r.append(pict)

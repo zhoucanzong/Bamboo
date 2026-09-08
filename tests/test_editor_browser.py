@@ -407,3 +407,36 @@ def test_gift_editor_add_calculate_edit_undo_and_export(editor):
         with page.expect_download() as download:
             page.locator("#modal-form button[type=submit]").click()
         assert download.value.failure() is None
+
+
+def test_genealogy_people_relations_cycle_validation_and_paper_edit(editor):
+    page, app, folder, expect, url = editor
+    page.locator("#family-book").click()
+    expect(page.locator("#structured-dialog")).to_be_visible()
+    for name in ["张守礼", "李氏", "张文清"]:
+        page.locator("#structured-add").click()
+        page.locator("#structured-records tbody tr").last.locator(
+            "[data-field=name]"
+        ).fill(name)
+    rows = page.locator("#structured-records tbody tr")
+    a = rows.nth(0).get_attribute("data-record")
+    b = rows.nth(1).get_attribute("data-record")
+    c = rows.nth(2).get_attribute("data-record")
+    rows.nth(0).locator("[data-field=spouses]").select_option(b)
+    rows.nth(2).locator("[data-field=parents]").select_option([a, b])
+    rows.nth(0).locator("[data-field=biography]").fill("耕读传家，修身齐家。")
+    page.locator("#structured-save").click()
+    expect(page.locator("#structured-dialog")).not_to_be_visible()
+    expect(page.locator("#word-count")).to_have_text("3 条记录")
+    assert current(app).book.special.records[2].parents == (a, b)
+    page.locator(".page text[data-object]").first.click()
+    page.locator("#structured-records tbody tr").first.locator(
+        "[data-field=parents]"
+    ).select_option(c)
+    page.locator("#structured-save").click()
+    expect(page.locator("#structured-error")).to_contain_text("循环")
+    page.locator("#structured-cancel").click()
+    assert current(app).book.special.records[0].parents == ()
+    page.screenshot(path=str(folder / "genealogy-editor.png"))
+    page.reload()
+    expect(page.locator("#word-count")).to_have_text("3 条记录")

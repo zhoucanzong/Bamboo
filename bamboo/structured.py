@@ -1,6 +1,6 @@
 """Typed, editable collections. Money is stored as decimal text, never float."""
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from decimal import Decimal, InvalidOperation
 from datetime import date
 import re
@@ -144,7 +144,7 @@ def validate_records(records, cls):
 def from_dict(data):
     if not isinstance(data, dict):
         raise BambooError("专用文档需要为对象")
-    types = {"gift": (GiftLedger, GiftRecord)}
+    types = {"gift": (GiftLedger, GiftRecord), "genealogy": (Genealogy, FamilyPerson)}
     if data.get("kind") not in types:
         raise BambooError("未知专用文档类型")
     cls, record_cls = types[data["kind"]]
@@ -161,7 +161,7 @@ def from_dict(data):
 
 
 def validate(value):
-    if value is not None and not isinstance(value, GiftLedger):
+    if value is not None and not isinstance(value, (GiftLedger, Genealogy)):
         raise BambooError("无效专用文档")
 
 
@@ -174,4 +174,122 @@ def summary(document):
             "total": format(total, ".2f"),
             "uppercase": money_upper(format(total, ".2f")),
         }
+    if isinstance(document, Genealogy):
+        return {
+            "kind": "genealogy",
+            "count": len(document.records),
+            "generations": max(
+                family_generations(document.records).values(), default=0
+            ),
+        }
     return {}
+
+
+@dataclass(frozen=True)
+class FamilyPerson:
+    id: str
+    name: str
+    parents: tuple = ()
+    spouses: tuple = ()
+    birth: str = ""
+    death: str = ""
+    biography: str = ""
+
+    def __post_init__(self):
+        identifier(self.id)
+        text(self.name, "姓名", 40, False)
+        for key in ["parents", "spouses"]:
+            values = getattr(self, key)
+            if (
+                not isinstance(values, (tuple, list))
+                or any(not isinstance(v, str) for v in values)
+                or len(values) != len(set(values))
+            ):
+                raise BambooError("亲属关系不可重复")
+            for value in values:
+                identifier(value)
+            if self.id in values:
+                raise BambooError("人物不能与自己建立亲属关系")
+            object.__setattr__(self, key, tuple(values))
+        if len(self.parents) > 2:
+            raise BambooError("每个人物最多指定两位父母")
+        text(self.birth, "生年", 40)
+        text(self.death, "卒年", 40)
+        text(self.biography, "传记", 2000)
+
+
+@dataclass(frozen=True)
+class Genealogy:
+    records: tuple = ()
+    occasion: str = ""
+    date: str = ""
+    per_page: int = 8
+    kind: str = "genealogy"
+
+    def __post_init__(self):
+        if self.kind != "genealogy":
+            raise BambooError("无效族谱类型")
+        validate_records(self.records, FamilyPerson)
+        object.__setattr__(self, "records", tuple(self.records))
+        text(self.occasion, "堂号", 80)
+        text(self.date, "修谱日期", 30)
+        if type(self.per_page) is not int or not 1 <= self.per_page <= 12:
+            raise BambooError("每张世系图容纳1～12个人物")
+        family_generations(self.records)
+        partners = {r.id: set(r.spouses) for r in self.records}
+        order = {r.id: i for i, r in enumerate(self.records)}
+        for r in self.records:
+            for spouse in r.spouses:
+                partners[spouse].add(r.id)
+        object.__setattr__(
+            self,
+            "records",
+            tuple(
+                replace(
+                    r, spouses=tuple(sorted(partners[r.id], key=lambda i: order[i]))
+                )
+                for r in self.records
+            ),
+        )
+
+
+def family_generations(records):
+    """Spouses share a generation; collapse couples, then topologically rank parents."""
+    ids = {r.id for r in records}
+    representatives = {i: i for i in ids}
+
+    def root(i):
+        while representatives[i] != i:
+            representatives[i] = representatives[representatives[i]]
+            i = representatives[i]
+        return i
+
+    for r in records:
+        if not set(r.parents + r.spouses) <= ids:
+            raise BambooError(f"{r.name}的亲属尚未录入")
+        for spouse in r.spouses:
+            representatives[root(spouse)] = root(r.id)
+    edges = {root(i): set() for i in ids}
+    indegree = {i: 0 for i in edges}
+    for r in records:
+        for parent in r.parents:
+            a, b = root(parent), root(r.id)
+            if a == b:
+                raise BambooError("父母与子女不能处于同一配偶关系组")
+            if b not in edges[a]:
+                edges[a].add(b)
+                indegree[b] += 1
+    ready = sorted(i for i, d in indegree.items() if d == 0)
+    level = {i: 1 for i in ready}
+    visited = 0
+    while ready:
+        current = ready.pop()
+        visited += 1
+        for child in edges[current]:
+            level[child] = max(level.get(child, 1), level[current] + 1)
+            indegree[child] -= 1
+            if not indegree[child]:
+                ready.append(child)
+    if visited != len(edges):
+        raise BambooError("亲子关系形成循环，请检查世代关系")
+    return {i: level[root(i)] for i in ids}

@@ -298,7 +298,9 @@ def gift_layout(book):
 
 
 def compose_special(book):
-    pages = gift_layout(book)
+    pages = (
+        family_layout(book) if book.special.kind == "genealogy" else gift_layout(book)
+    )
     for page in pages:
         for g in page.glyphs:
             if (
@@ -321,3 +323,248 @@ def compose_special(book):
             },
         ),
     )
+
+
+def family_layout(book):
+    from .structured import family_generations
+    from .model import Line
+
+    p = book.profile
+    doc = book.special
+    levels = family_generations(doc.records)
+    ordered = sorted(enumerate(doc.records), key=lambda r: (levels[r[1].id], r[0]))
+    people = [r for _, r in ordered]
+    groups = [
+        people[i : i + doc.per_page] for i in range(0, len(people), doc.per_page)
+    ] or [[]]
+    page_of = {r.id: i + 1 for i, group in enumerate(groups) for r in group}
+    pages = []
+    edges = []
+    spouses = set()
+    for r in doc.records:
+        edges.extend((parent, r.id, "parent") for parent in r.parents)
+        spouses.update(tuple(sorted((r.id, s))) for s in r.spouses)
+    edges.extend((a, b, "spouse") for a, b in sorted(spouses))
+    for pi, group in enumerate(groups):
+        glyphs, widgets = frame(book, pi + 1)
+        lines = []
+        nodes = []
+        positions = {}
+        width = p.width - 2 * p.margin_x
+        height = p.height - max(p.margin_top, 76) - 60
+        top = max(p.margin_top, 76)
+        used = sorted({levels[r.id] for r in group})
+        bygen = {g: [r for r in group if levels[r.id] == g] for g in used}
+        for gi, gen in enumerate(used):
+            for ri, r in enumerate(bygen[gen]):
+                if p.vertical:
+                    band = width / len(used)
+                    space = height / len(bygen[gen])
+                    w = min(150, band * 0.62)
+                    h = min(100, space * 0.76)
+                    x = p.width - p.margin_x - (gi + 0.5) * band - w / 2
+                    y = top + (ri + 0.5) * space - h / 2
+                else:
+                    band = height / len(used)
+                    space = width / len(bygen[gen])
+                    w = min(160, space * 0.76)
+                    h = min(90, band * 0.60)
+                    x = p.margin_x + (ri + 0.5) * space - w / 2
+                    y = top + (gi + 0.5) * band - h / 2
+                refs = []
+                for label, targets in [
+                    ("父母", r.parents),
+                    (
+                        "配偶",
+                        [
+                            s
+                            for a, b, k in edges
+                            if k == "spouse" and r.id in (a, b)
+                            for s in [b if a == r.id else a]
+                        ],
+                    ),
+                    ("子女", [b for a, b, k in edges if k == "parent" and a == r.id]),
+                ]:
+                    other = sorted(
+                        {page_of[t] for t in targets if page_of[t] != pi + 1}
+                    )
+                    if other:
+                        ranges = []
+                        start = previous = other[0]
+                        for n in other[1:] + [None]:
+                            if n is not None and n == previous + 1:
+                                previous = n
+                                continue
+                            ranges.append(
+                                str(start)
+                                if start == previous
+                                else f"{start}—{previous}"
+                            )
+                            start = previous = n
+                        refs.append(label + "见第" + ",".join(ranges) + "页")
+                value = (
+                    r.name + f"\n第{gen}世" + (("\n" + "；".join(refs)) if refs else "")
+                )
+                gs, node = text_widget(
+                    value, x, y, w, h, 12, p.ink, p.vertical, r.id, "name"
+                )
+                glyphs += gs
+                node["name"] = r.name
+                node["kind"] = "node"
+                nodes.append(node)
+                positions[r.id] = node
+                lines += rectangle(x, y, w, h, p.rule_color, 0.8)
+        for a, b, kind in edges:
+            if a not in positions or b not in positions:
+                continue
+            src, dst = positions[a], positions[b]
+            color = p.accent if kind == "spouse" else p.ink
+            if kind == "spouse":
+                if p.vertical:
+                    start = (src["x"] + src["width"], src["y"] + src["height"] / 2)
+                    end = (dst["x"] + dst["width"], dst["y"] + dst["height"] / 2)
+                    side = max(start[0], end[0]) + 10
+                    path = [start, (side, start[1]), (side, end[1]), end]
+                else:
+                    start = (src["x"] + src["width"] / 2, src["y"])
+                    end = (dst["x"] + dst["width"] / 2, dst["y"])
+                    side = min(start[1], end[1]) - 10
+                    path = [start, (start[0], side), (end[0], side), end]
+                lines.extend(Line(*u, *v, 0.65, color) for u, v in zip(path, path[1:]))
+                continue
+            if p.vertical:
+                start = (src["x"], src["y"] + src["height"] / 2)
+                end = (dst["x"] + dst["width"], dst["y"] + dst["height"] / 2)
+                mid = (start[0] + end[0]) / 2
+                path = [start, (mid, start[1]), (mid, end[1]), end]
+            else:
+                start = (src["x"] + src["width"] / 2, src["y"] + src["height"])
+                end = (dst["x"] + dst["width"] / 2, dst["y"])
+                mid = (start[1] + end[1]) / 2
+                path = [start, (start[0], mid), (end[0], mid), end]
+            lines.extend(Line(*u, *v, 0.65, color) for u, v in zip(path, path[1:]))
+        if not group:
+            gs, node = text_widget(
+                "点击纸面添加人物", p.margin_x, top, width, 40, 14, p.ink
+            )
+            glyphs += gs
+            nodes.append(node)
+        widgets.append(
+            {
+                "kind": "graph",
+                "nodes": nodes,
+                "lines": [
+                    {
+                        "x1": l.x1,
+                        "y1": l.y1,
+                        "x2": l.x2,
+                        "y2": l.y2,
+                        "color": l.color,
+                        "width": l.width,
+                    }
+                    for l in lines[4 * len(positions) :]
+                ],
+                "height": height,
+                "y": top,
+            }
+        )
+        gs, w = text_widget(
+            f"黑线：亲子　朱线：配偶　人物传记从第{len(groups)+1}页起　　第{pi+1}页",
+            p.margin_x,
+            p.height - 42,
+            width,
+            26,
+            10,
+            p.ink,
+        )
+        glyphs += gs
+        widgets.append(w)
+        pages.append(
+            Page(
+                pi + 1,
+                tuple(glyphs),
+                tuple(lines),
+                (),
+                profile=p,
+                folio=pi + 1,
+                widgets=tuple(widgets),
+            )
+        )
+    byid = {r.id: r for r in doc.records}
+    index = {r.id: i + 1 for i, r in enumerate(doc.records)}
+
+    def relative(values):
+        return "；".join(f"{index[i]} {byid[i].name}" for i in values)
+
+    for person in doc.records:
+        number = len(pages) + 1
+        glyphs, widgets = frame(book, number)
+        all_spouses = [
+            b if a == person.id else a for a, b in spouses if person.id in (a, b)
+        ]
+        values = [
+            ("name", "姓名", person.name),
+            ("parents", "父母", relative(person.parents)),
+            ("spouses", "配偶", relative(sorted(all_spouses, key=lambda i: index[i]))),
+            ("birth", "生年", person.birth),
+            ("death", "卒年", person.death),
+            ("biography", "传记", person.biography),
+        ]
+        top = max(68, p.margin_top)
+        height = p.height - top - 55
+        rows = [
+            [
+                {"text": label, "header": True},
+                {"text": value, "record": person.id, "field": key},
+            ]
+            for key, label, value in values
+        ]
+        if p.vertical:
+            rows = [
+                [
+                    {"text": label, "header": True}
+                    for key, label, value in reversed(values)
+                ],
+                [
+                    {"text": value, "record": person.id, "field": key}
+                    for key, label, value in reversed(values)
+                ],
+            ]
+            widths = [
+                (p.width - 2 * p.margin_x) * v for v in [0.5, 0.1, 0.1, 0.1, 0.1, 0.1]
+            ]
+            heights = [38, height - 38]
+        else:
+            widths = [
+                (p.width - 2 * p.margin_x) * 0.14,
+                (p.width - 2 * p.margin_x) * 0.86,
+            ]
+            heights = [32] * 5 + [height - 160]
+        gs, lines, table = table_widget(
+            rows, widths, heights, p.margin_x, top, min(p.font_size, 14), p, p.vertical
+        )
+        glyphs += gs
+        widgets.append(table)
+        gs, w = text_widget(
+            f"人物序号 {index[person.id]}　　第{levels[person.id]}世　　世系图见第{page_of[person.id]}页　　第{number}页",
+            p.margin_x,
+            p.height - 42,
+            p.width - 2 * p.margin_x,
+            26,
+            10,
+            p.ink,
+        )
+        glyphs += gs
+        widgets.append(w)
+        pages.append(
+            Page(
+                number,
+                tuple(glyphs),
+                tuple(lines),
+                (),
+                profile=p,
+                folio=number,
+                widgets=tuple(widgets),
+            )
+        )
+    return tuple(pages)

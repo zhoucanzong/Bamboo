@@ -60,6 +60,10 @@ def export_html(layout, font, path):
                             + "</tr>"
                         )
                     transcript.append("</table>")
+                elif widget["kind"] == "graph":
+                    transcript.extend(
+                        "<p>" + escape(n["text"]) + "</p>" for n in widget["nodes"]
+                    )
                 else:
                     transcript.append("<p>" + escape(widget["text"]) + "</p>")
     note_index = 0

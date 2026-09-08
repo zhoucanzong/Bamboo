@@ -113,3 +113,102 @@ def test_gift_native_word_and_live_values(tmp_path, vertical):
             dst.writestr(name, data)
     changed, _ = import_docx(raw.getvalue())
     assert summary(changed.book.special)["total"] == "1801.80"
+
+
+def family_book(vertical=True):
+    from bamboo.structured import FamilyPerson, Genealogy
+
+    p = gift_book(vertical, 0).profile
+    people = (
+        FamilyPerson("a", "张守礼", spouses=("b",), biography="耕读传家。"),
+        FamilyPerson("b", "李氏"),
+        FamilyPerson("c", "张文清", parents=("a", "b")),
+        FamilyPerson("d", "张文和", parents=("a", "b")),
+        FamilyPerson("e", "张承远", parents=("c",)),
+    )
+    return Book(
+        "张氏族谱", (Block(),), profile=p, special=Genealogy(people, per_page=3)
+    )
+
+
+def test_genealogy_generations_and_cross_page_references():
+    from bamboo.structured import family_generations
+
+    book = family_book()
+    levels = family_generations(book.special.records)
+    assert levels == {"a": 1, "b": 1, "c": 2, "d": 2, "e": 3}
+    assert book.special.records[1].spouses == ("a",)
+    layout = compose(book)
+    assert len(layout.pages) == 7
+    graphs = [w for p in layout.pages for w in p.widgets if w["kind"] == "graph"]
+    assert len(graphs) == 2
+    assert any("见第2页" in node["text"] for node in graphs[0]["nodes"])
+    assert any("见第1页" in node["text"] for node in graphs[1]["nodes"])
+    assert {n["record"] for g in graphs for n in g["nodes"]} == {
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+    }
+
+
+@pytest.mark.parametrize(
+    "people",
+    [
+        [{"id": "a", "name": "甲", "parents": ["b"]}],
+        [
+            {"id": "a", "name": "甲", "parents": ["b"]},
+            {"id": "b", "name": "乙", "parents": ["a"]},
+        ],
+        [
+            {"id": "a", "name": "甲", "parents": ["b"], "spouses": ["b"]},
+            {"id": "b", "name": "乙"},
+        ],
+    ],
+)
+def test_invalid_genealogy_relationships(people):
+    from bamboo.structured import from_dict as special_from_dict
+
+    with pytest.raises(BambooError):
+        special_from_dict({"kind": "genealogy", "records": people})
+
+
+@pytest.mark.parametrize("vertical", [False, True])
+def test_genealogy_exports_native_nodes_relatives_and_biographies(tmp_path, vertical):
+    book = family_book(vertical)
+    result = render(book, tmp_path)
+    doc = Document(result.files["docx"])
+    assert len(doc.tables) == 5
+    nodes = [
+        n for n in doc._element.iter() if n.get("id", "").startswith("JianduPerson")
+    ]
+    assert len(nodes) == 5
+    assert any(n.get("id", "").startswith("JianduLink") for n in doc._element.iter())
+    imported, warnings = import_docx(Path(result.files["docx"]).read_bytes())
+    assert imported.book.special == book.special
+    assert from_dict(json.loads(json.dumps(asdict(book)))) == book
+
+
+def test_word_diagram_name_edit_survives_import(tmp_path):
+    from lxml import etree
+
+    book = family_book()
+    result = render(book, tmp_path, formats=("docx",))
+    raw = BytesIO()
+    with zipfile.ZipFile(result.files["docx"]) as src, zipfile.ZipFile(raw, "w") as dst:
+        for name in src.namelist():
+            data = src.read(name)
+            if name == "word/document.xml":
+                root = etree.fromstring(data)
+                for sdt in root.iter(qn("w:sdt")):
+                    tag = sdt.find(qn("w:sdtPr") + "/" + qn("w:tag"))
+                    if (
+                        tag is not None
+                        and tag.get(qn("w:val")) == "bamboo:genealogy:a:diagram_name"
+                    ):
+                        next(sdt.iter(qn("w:t"))).text = "张守义"
+                data = etree.tostring(root)
+            dst.writestr(name, data)
+    imported, warnings = import_docx(raw.getvalue())
+    assert imported.book.special.records[0].name == "张守义"

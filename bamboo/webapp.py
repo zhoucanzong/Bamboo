@@ -323,6 +323,8 @@ def make_handler(app):
                             margin_bottom=36,
                             border="single",
                         )
+                        if data["kind"] in {"genealogy", "gongche"}:
+                            p = p.updated(writing_mode="vertical-rl")
                         session = EditorSession(
                             Book(
                                 "未命名" + names[data["kind"]],
