@@ -1,4 +1,4 @@
-# Bamboo 竹簡
+# Bamboo 竹简
 
 Bamboo 是一个古籍编辑与排版引擎，带有可直接操作的编辑界面。用户从空白文档开始，在纸面上输入、拖选文字、设置夹注或课注，编辑后立即重排。PDF、HTML、DOCX 是导出格式，不是编辑入口。
 
@@ -70,7 +70,7 @@ bamboo edit --no-browser --port 8765 --workspace output/editor
 from bamboo import EditorSession, Position
 
 editor = EditorSession()  # 真正的空白文档，不读取源文件
-editor.dispatch({"type": "insert_text", "text": "山窗日暖\n竹影入簾"})
+editor.dispatch({"type": "insert_text", "text": "山窗日暖\n竹影入帘"})
 editor.select(Position(editor.block_ids[0], 0), Position(editor.block_ids[0], 4))
 editor.dispatch({"type": "format_range", "kind": "note"})
 editor.dispatch({"type": "undo"})
@@ -141,21 +141,21 @@ PDF 与 HTML 共用固定布局。DOCX 使用相同的方向、纸张、字体�
 ## 批处理辅助格式（可选）
 
 ```text
-@title 竹窗讀書記
+@title 竹窗读书记
 @volume 卷一
 @preset single
 
-# 讀書小記
+# 读书小记
 
-　　山窗日暖，竹影入簾。[[小字雙行，隨文排入。]]展卷讀書，{{心與古人相接。}}
+　　山窗日暖，竹影入帘。[[小字双行，随文排入。]]展卷读书，{{心与古人相接。}}
 
-> 課注：本段先寫景，再說讀書的感受。課注跟隨前段，使用小字表達。
+> 课注：本段先写景，再说读书的感受。课注跟随前段，使用小字表达。
 
-後文仍然保持竪排((此處為 Word 原生腳注的示例。))。
+后文仍然保持竖排((此处为 Word 原生脚注的示例。))。
 
 ---
 
-此處明確另起一頁。
+此处明确另起一页。
 ```
 
 - 元数据在正文之前。模板有 `woodblock`、`red-ruled`、`single`、`horizontal`。
@@ -170,11 +170,11 @@ PDF 与 HTML 共用固定布局。DOCX 使用相同的方向、纸张、字体�
 
 ```json
 {
-  "title": "評讀小記",
+  "title": "评读小记",
   "preset": "single",
   "blocks": [{"inlines": [
-    {"text": "學而時習之", "kind": "ruby", "annotation": "溫故知新"},
-    {"text": "讀書須知先後"}
+    {"text": "学而时习之", "kind": "ruby", "annotation": "温故知新"},
+    {"text": "读书须知先后"}
   ]}]
 }
 ```
@@ -187,11 +187,11 @@ PDF 与 HTML 共用固定布局。DOCX 使用相同的方向、纸张、字体�
 from bamboo import Book, Block, Inline, PRESETS, compose, render
 
 book = Book(
-    title="竹窗讀書記",
+    title="竹窗读书记",
     blocks=(
-        Block((Inline("讀書小記"),), kind="heading", indent=1),
-        Block((Inline("山窗日暖，"), Inline("小字雙行。", kind="note"), Inline("竹影入簾。"))),
-        Block((Inline("課注：此段從景物引入讀書之樂。"),), kind="commentary"),
+        Block((Inline("读书小记"),), kind="heading", indent=1),
+        Block((Inline("山窗日暖，"), Inline("小字双行。", kind="note"), Inline("竹影入帘。"))),
+        Block((Inline("课注：此段从景物引入读书之乐。"),), kind="commentary"),
     ),
     profile=PRESETS["single"],
 )
