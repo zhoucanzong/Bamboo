@@ -1,0 +1,1785 @@
+{
+  "title": "页面样式选集",
+  "blocks": [
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "朱栏序言",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 22,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 17,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "#c52c27",
+          "line_color": "#e1b3ad",
+          "fish_tail_color": "#c52c27",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "朱栏序言",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "诗文疏排",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 18,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 18,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "#c52c27",
+          "line_color": "#e1b3ad",
+          "fish_tail_color": "#c52c27",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "诗文疏排",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "典籍密排",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 12,
+          "rows": 26,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 14,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "#c52c27",
+          "line_color": "#e1b3ad",
+          "fish_tail_color": "#c52c27",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "典籍密排",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "素墨古籍",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 20,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 19,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "outline",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "素墨古籍",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "无装饰书页",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 460,
+          "height": 650,
+          "margin_x": 32,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 22,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 20,
+          "punctuation": "keep",
+          "border": "none",
+          "rules": false,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "无装饰书页",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "横排书页",
+        "profile": {
+          "writing_mode": "horizontal-tb",
+          "width": 595,
+          "height": 842,
+          "margin_x": 48,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 26,
+          "rows": 24,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 16,
+          "punctuation": "keep",
+          "border": "none",
+          "rules": false,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "横排书页",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "单页墨栏",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 460,
+          "height": 650,
+          "margin_x": 32,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 9,
+          "rows": 20,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 20,
+          "punctuation": "judou",
+          "border": "single",
+          "rules": true,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "单页墨栏",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "蓝栏抄本",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 460,
+          "height": 650,
+          "margin_x": 32,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 10,
+          "rows": 21,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 18,
+          "punctuation": "judou",
+          "border": "single",
+          "rules": true,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#6986a0",
+          "paper": "#fafcfd",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "#c0d2df",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "蓝栏抄本",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "米纸刻本",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 9,
+          "rows": 21,
+          "panels": 2,
+          "spine": 32,
+          "font_size": 18,
+          "punctuation": "judou",
+          "border": "double",
+          "rules": true,
+          "fish_tail": true,
+          "fish_tail_style": "double",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#806748",
+          "paper": "#f5ecd8",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "#c6b795",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "米纸刻本",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "大字疏排",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 595,
+          "height": 842,
+          "margin_x": 48,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 8,
+          "rows": 18,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 30,
+          "punctuation": "keep",
+          "border": "single",
+          "rules": false,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "大字疏排",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "袖珍小本",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 320,
+          "height": 460,
+          "margin_x": 24,
+          "margin_top": 32,
+          "margin_bottom": 32,
+          "columns": 8,
+          "rows": 20,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 12,
+          "punctuation": "keep",
+          "border": "single",
+          "rules": true,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#fffdf7",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "#ccc4b5",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "袖珍小本",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "宽栏批校",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 595,
+          "height": 842,
+          "margin_x": 56,
+          "margin_top": 100,
+          "margin_bottom": 56,
+          "columns": 7,
+          "rows": 24,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 18,
+          "punctuation": "keep",
+          "border": "single",
+          "rules": true,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "#dfd9cf",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "宽栏批校",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "序跋留白",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 595,
+          "height": 842,
+          "margin_x": 72,
+          "margin_top": 144,
+          "margin_bottom": 80,
+          "columns": 8,
+          "rows": 18,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 22,
+          "punctuation": "keep",
+          "border": "none",
+          "rules": false,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#fffdf8",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "序跋留白",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "经文长行",
+        "profile": {
+          "writing_mode": "vertical-rl",
+          "width": 842,
+          "height": 595,
+          "margin_x": 40,
+          "margin_top": 36,
+          "margin_bottom": 36,
+          "columns": 24,
+          "rows": 30,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 11.5,
+          "punctuation": "keep",
+          "border": "double",
+          "rules": true,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": false,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "#d9d3c8",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "经文长行",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "横排研读",
+        "profile": {
+          "writing_mode": "horizontal-tb",
+          "width": 595,
+          "height": 842,
+          "margin_x": 48,
+          "margin_top": 64,
+          "margin_bottom": 64,
+          "columns": 22,
+          "rows": 26,
+          "panels": 1,
+          "spine": 0,
+          "font_size": 16,
+          "punctuation": "keep",
+          "border": "single",
+          "rules": true,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": true,
+          "show_volume": true,
+          "show_page_number": true,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "#dce3de",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "横排研读",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "读书小记",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "heading",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": {
+        "name": "横排双栏",
+        "profile": {
+          "writing_mode": "horizontal-tb",
+          "width": 842,
+          "height": 595,
+          "margin_x": 42,
+          "margin_top": 48,
+          "margin_bottom": 48,
+          "columns": 20,
+          "rows": 22,
+          "panels": 2,
+          "spine": 30,
+          "font_size": 12,
+          "punctuation": "keep",
+          "border": "single",
+          "rules": false,
+          "fish_tail": false,
+          "fish_tail_style": "solid",
+          "fish_tail_direction": "auto",
+          "spine_rules": true,
+          "show_title": false,
+          "show_volume": false,
+          "show_page_number": false,
+          "ink": "#24221f",
+          "rule_color": "#4a4136",
+          "paper": "#ffffff",
+          "accent": "#9b3028",
+          "border_color": "",
+          "line_color": "",
+          "fish_tail_color": "",
+          "spine_ink": "",
+          "show_author": false
+        },
+        "title": "横排双栏",
+        "volume": null,
+        "author": null,
+        "page_type": "body",
+        "cover_border": "double",
+        "cover_width": 70,
+        "page_number_start": 1
+      }
+    },
+    {
+      "inlines": [
+        {
+          "text": "山窗日暖，竹影入帘。展卷读书，心与古人相接。晨起看山，夜深听雨。读书贵在明理，作文重在达意。细读而深思，温故而知新。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "小注：此段从景物引入读书之乐。",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "commentary",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    },
+    {
+      "inlines": [
+        {
+          "text": "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？",
+          "kind": "text",
+          "annotation": "",
+          "target": "",
+          "boxed": true,
+          "seal_style": "red"
+        }
+      ],
+      "kind": "paragraph",
+      "indent": 0,
+      "level": 1,
+      "style": "",
+      "section": null
+    }
+  ],
+  "volume": "卷一",
+  "author": "",
+  "profile": {
+    "writing_mode": "vertical-rl",
+    "width": 460,
+    "height": 650,
+    "margin_x": 32,
+    "margin_top": 48,
+    "margin_bottom": 48,
+    "columns": 10,
+    "rows": 22,
+    "panels": 1,
+    "spine": 0,
+    "font_size": 20,
+    "punctuation": "keep",
+    "border": "none",
+    "rules": false,
+    "fish_tail": false,
+    "fish_tail_style": "solid",
+    "fish_tail_direction": "auto",
+    "spine_rules": false,
+    "show_title": false,
+    "show_volume": false,
+    "show_page_number": false,
+    "ink": "#24221f",
+    "rule_color": "#4a4136",
+    "paper": "#ffffff",
+    "accent": "#9b3028",
+    "border_color": "",
+    "line_color": "",
+    "fish_tail_color": "",
+    "spine_ink": "",
+    "show_author": false
+  },
+  "annotations": [],
+  "styles": []
+}

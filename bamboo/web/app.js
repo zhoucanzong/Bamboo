@@ -280,3 +280,41 @@ $('page-setup').onclick=async()=>{const p=activeProfile(),a=await modal('纸张�
 {name:'margin_x',label:'左右留白',type:'number',value:p.margin_x},
 {name:'margin_top',label:'上方留白',type:'number',value:p.margin_top},
 {name:'margin_bottom',label:'下方留白',type:'number',value:p.margin_bottom}]);if(a)await command({type:'set_profile',values:Object.fromEntries(Object.entries(a).map(([k,v])=>[k,Number(v)]))});};
+
+let pageStyleCatalog=null,chosenPageStyle=null;
+function paintPageStyleCards(){
+ const grid=$('page-style-grid'),category=$('page-style-category').value;
+ grid.replaceChildren();
+ const items=pageStyleCatalog.filter(s=>category==='all'||s.category===category);
+ $('page-style-count').textContent=`${items.length} / ${pageStyleCatalog.length} 种样式`;
+ for(const item of items){
+  const p=item.profile,card=document.createElement('button');card.type='button';card.className='page-style-card';card.dataset.style=item.id;card.setAttribute('aria-pressed',String(chosenPageStyle===item.id));
+  const picture=svg('svg',{viewBox:`0 0 ${p.width} ${p.height}`,'aria-hidden':'true'});
+  picture.append(svg('rect',{width:p.width,height:p.height,fill:p.paper}));
+  for(const l of item.preview.lines)picture.append(svg('line',{x1:l.x1,y1:l.y1,x2:l.x2,y2:l.y2,stroke:l.color,'stroke-width':l.width}));
+  for(const q of item.preview.polygons)picture.append(svg('polygon',{points:q.points.map(p=>p.join(',')).join(' '),fill:q.color}));
+  for(const g of item.preview.glyphs){const t=svg('text',{x:g.baseline_x,y:g.baseline_y,'font-size':g.size,fill:g.color});t.textContent=g.text;picture.append(t);}
+  const thumb=document.createElement('div');thumb.className='page-style-thumb';thumb.append(picture);
+  const title=document.createElement('strong');title.textContent=item.name;
+  const detail=document.createElement('span');detail.textContent=`${p.writing_mode==='vertical-rl'?'竖排':'横排'} · ${p.panels===2?(p.writing_mode==='vertical-rl'?'双面':'双栏'):'单页'} · ${p.font_size} 磅`;
+  card.append(thumb,title,detail);
+  card.onclick=()=>{chosenPageStyle=item.id;grid.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.style===item.id)));$('page-style-description').textContent=item.name+'：'+item.description;$('page-style-apply').disabled=false;};
+  grid.append(card);
+ }
+}
+async function openPageStyles(){
+ try{
+  await queue;
+  if(activeSection().page_type==='title-slip'){feedback('请先点击正文篇章，再选择页面样式；封面可通过“题签封面”调整。');return;}
+  if(!pageStyleCatalog)pageStyleCatalog=(await json('/api/page-styles')).styles;
+  chosenPageStyle=null;$('page-style-new').checked=false;$('page-style-apply').disabled=true;$('page-style-apply').textContent='应用到当前篇章';$('page-style-description').textContent='选择样式查看说明。';
+  $('page-style-category').replaceChildren();
+  for(const value of ['all',...new Set(pageStyleCatalog.map(s=>s.category))]){const option=document.createElement('option');option.value=value;option.textContent=value==='all'?'全部样式':value;$('page-style-category').append(option);}
+  paintPageStyleCards();$('page-style-dialog').showModal();
+ }catch(e){feedback(e.message,true);}
+}
+$('page-templates').onclick=openPageStyles;$('page-templates-side').onclick=openPageStyles;
+$('page-style-category').onchange=paintPageStyleCards;
+$('page-style-new').onchange=()=>{$('page-style-apply').textContent=$('page-style-new').checked?'从当前段落应用':'应用到当前篇章';};
+for(const id of ['page-style-close','page-style-cancel'])$(id).onclick=()=>$('page-style-dialog').close();
+$('page-style-apply').onclick=async()=>{if(!chosenPageStyle)return;const preset=chosenPageStyle,start=$('page-style-new').checked;$('page-style-dialog').close();await command({type:'set_section',new:start,preset});};

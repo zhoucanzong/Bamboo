@@ -307,3 +307,63 @@ def test_style_sample_opens_as_editable_and_prints_mixed_sizes(editor):
             (round(p.profile.width), round(p.profile.height))
             for p in current(app).layout().pages
         ]
+
+
+def test_page_style_gallery_previews_filters_and_all_new_choices(editor):
+    from bamboo.styles import page_style_presets
+    from tests.test_styles import NEW_PAGE_STYLES
+
+    page, app, folder, expect, url = editor
+    page.locator(".page svg").click(position={"x": 430, "y": 80})
+    page.keyboard.insert_text("页面样式保留正文")
+    expect(page.locator("#word-count")).to_have_text("8 字")
+    page.locator("#page-templates-side").click()
+    expect(page.locator(".page-style-card")).to_have_count(16)
+    expect(page.locator("#page-style-apply")).to_be_disabled()
+    page.set_viewport_size({"width": 1480, "height": 1400})
+    page.evaluate("document.fonts.ready")
+    page.screenshot(path=str(folder / "page-style-gallery.png"))
+    page.locator("#page-style-category").select_option("横排阅读")
+    expect(page.locator(".page-style-card")).to_have_count(3)
+    page.locator("#page-style-cancel").click()
+    assert current(app).revision == 1
+    ids = current(app).block_ids
+    for key in sorted(NEW_PAGE_STYLES):
+        page.locator("#page-templates-side").click()
+        page.locator(f'[data-style="{key}"]').click()
+        expect(page.locator(f'[data-style="{key}"]')).to_have_attribute(
+            "aria-pressed", "true"
+        )
+        page.locator("#page-style-apply").click()
+        expect(page.locator("#section-name")).to_have_text(
+            "当前篇章：" + page_style_presets()[key][0]
+        )
+        expect(page.locator("#issues")).not_to_be_visible()
+        assert current(app).book.blocks[0].text == "页面样式保留正文"
+        assert current(app).block_ids == ids
+        assert (
+            current(app).book.blocks[0].section.profile == page_style_presets()[key][1]
+        )
+    page.locator("#undo").click()
+    page.reload()
+    expect(page.locator("#word-count")).to_have_text("8 字")
+
+
+def test_page_style_gallery_new_chapter_scope(editor):
+    page, app, folder, expect, url = editor
+    page.locator(".page svg").click(position={"x": 430, "y": 80})
+    page.keyboard.insert_text("前篇正文")
+    expect(page.locator("#word-count")).to_have_text("4 字")
+    page.keyboard.press("Enter")
+    page.keyboard.insert_text("后篇正文")
+    expect(page.locator("#word-count")).to_have_text("8 字")
+    original = current(app).book.profile
+    page.locator("#page-templates-side").click()
+    page.locator('[data-style="horizontal-columns"]').click()
+    page.locator("#page-style-new").check()
+    page.locator("#page-style-apply").click()
+    expect(page.locator("#page-count")).to_have_text("2 页")
+    expect(page.locator("#issues")).not_to_be_visible()
+    assert current(app).book.blocks[0].section is None
+    assert current(app).book.profile == original
+    assert not current(app).book.blocks[1].section.profile.vertical

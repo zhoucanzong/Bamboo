@@ -218,3 +218,75 @@ def test_facsimile_retains_each_page_size(tmp_path):
     assert [
         round(s.page_width.pt) for s in Document(result.files["docx"]).sections
     ] == [round(p.profile.width) for p in compose(book).pages]
+
+
+NEW_PAGE_STYLES = {
+    "single-ink",
+    "blue-manuscript",
+    "warm-edition",
+    "large-print",
+    "pocket-book",
+    "annotation-page",
+    "colophon-page",
+    "sutra-page",
+    "horizontal-study",
+    "horizontal-columns",
+}
+
+
+def test_page_style_catalog_has_ten_new_distinct_layouts():
+    from bamboo.styles import PAGE_STYLE_DESCRIPTIONS
+
+    presets = page_style_presets()
+    assert NEW_PAGE_STYLES <= presets.keys()
+    assert len(presets) >= 16
+    assert presets.keys() == PAGE_STYLE_DESCRIPTIONS.keys()
+    assert len(
+        {json.dumps(asdict(p), sort_keys=True) for _, p in presets.values()}
+    ) == len(presets)
+
+
+@pytest.mark.parametrize("key", page_style_presets())
+def test_all_page_styles_export_editable_word_and_fixed_formats(key, tmp_path):
+    from bamboo.styles import page_style_sample
+
+    book = page_style_sample(key)
+    result = render(book, tmp_path, basename=key)
+    p = book.profile
+    assert result.pages == 1
+    native = Document(result.files["docx"])
+    section = native.sections[0]
+    assert abs(section.page_width.pt - p.width) < 0.1
+    assert abs(section.page_height.pt - p.height) < 0.1
+    assert section._sectPr.find(qn("w:textDirection")).get(qn("w:val")) == (
+        "tbRl" if p.vertical else "lrTb"
+    )
+    assert section._sectPr.find(qn("w:cols")).get(qn("w:num")) == str(
+        1 if p.vertical else p.panels
+    )
+    assert all(b.text for b in book.blocks)
+    assert len(native.paragraphs) == len(book.blocks)
+    with fitz.open(result.files["pdf"]) as pdf:
+        assert len(pdf) == 1
+        assert abs(pdf[0].rect.width - p.width) < 0.1
+        assert "读书" in pdf[0].get_text().replace("\n", "")
+    assert "<svg" in Path(result.files["html"]).read_text()
+    back, warnings = import_docx(Path(result.files["docx"]).read_bytes())
+    assert back.book.profile.vertical == p.vertical
+    assert len(back.book.blocks) == len(book.blocks)
+
+
+def test_page_style_changes_preserve_text_ids_and_are_undoable():
+    s = EditorSession()
+    s.dispatch({"type": "insert_text", "text": "第一段\n第二段"})
+    s.select({"block_id": s.block_ids[1], "offset": 0})
+    s.dispatch({"type": "add_annotation", "text": "小批", "extent": 3})
+    before = s.book
+    ids = s.block_ids
+    s.dispatch({"type": "set_section", "preset": "annotation-page", "new": True})
+    assert [b.text for b in s.book.blocks] == [b.text for b in before.blocks]
+    assert s.book.annotations == before.annotations and s.block_ids == ids
+    assert context_at(s.book, 0).profile == before.profile
+    assert context_at(s.book, 1).profile == page_style_presets()["annotation-page"][1]
+    s.dispatch({"type": "undo"})
+    assert s.book == before

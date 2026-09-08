@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from functools import cached_property
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
@@ -71,6 +72,34 @@ class EditorApplication:
             except (ValueError, KeyError):
                 continue
         return result
+
+    @cached_property
+    def page_style_catalog(self):
+        from .styles import (
+            page_style_presets,
+            PAGE_STYLE_DESCRIPTIONS,
+            page_style_sample,
+        )
+        from .layout import compose
+
+        items = []
+        for key, (name, profile) in page_style_presets().items():
+            category, description = PAGE_STYLE_DESCRIPTIONS[key]
+            page = compose(page_style_sample(key)).pages[0]
+            preview = asdict(page)
+            for raw, glyph in zip(preview["glyphs"], page.glyphs):
+                raw["baseline_x"], raw["baseline_y"] = self.font.origin(glyph)
+            items.append(
+                {
+                    "id": key,
+                    "name": name,
+                    "category": category,
+                    "description": description,
+                    "profile": asdict(profile),
+                    "preview": preview,
+                }
+            )
+        return items
 
     def view(self, session):
         layout = session.layout()
@@ -230,6 +259,9 @@ def make_handler(app):
                 elif path == "/api/documents":
                     self._authorized()
                     self._send({"documents": app.list_documents()})
+                elif path == "/api/page-styles":
+                    self._authorized()
+                    self._send({"styles": app.page_style_catalog})
                 elif path == "/api/symbols":
                     self._authorized()
                     from .symbols import STYLES, fish_tail
