@@ -273,7 +273,7 @@ def test_all_page_styles_export_editable_word_and_fixed_formats(key, tmp_path):
     assert "<svg" in Path(result.files["html"]).read_text()
     back, warnings = import_docx(Path(result.files["docx"]).read_bytes())
     assert back.book.profile.vertical == p.vertical
-    assert len(back.book.blocks) == len(book.blocks)
+    assert len(back.book.blocks) == len(book.blocks)+len(book.annotations)
 
 
 def test_page_style_changes_preserve_text_ids_and_are_undoable():

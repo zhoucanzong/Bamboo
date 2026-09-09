@@ -1,8 +1,10 @@
 """Native Word stories: direction-preserving text, double-line notes and footnotes.
 
-No automatic page/column breaks or glyph text boxes are synthesized here. Word
-owns reflow; source page breaks are the only explicit pagination instructions.
+Word owns body reflow; individual body glyphs are not placed in text boxes.
+Source page breaks and annotation-only continuation pages use explicit breaks.
 """
+
+import math
 
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_LINE_SPACING
@@ -60,7 +62,7 @@ def line_pitch(profile):
     return (
         profile.line_advance - min(0.4, profile.line_advance * 0.02)
         if profile.vertical and profile.panels == 2 and profile.spine
-        else profile.line_advance
+        else profile.line_advance - 0.05 if profile.vertical else profile.line_advance
     )
 
 
@@ -100,7 +102,7 @@ def _styles(doc, font, p):
         style.paragraph_format.line_spacing = Pt(line_pitch(p))
 
 
-def _section(section, profile):
+def _section(section, profile, font=None):
     p = profile
     section.orientation = (
         WD_ORIENT.LANDSCAPE if p.width > p.height else WD_ORIENT.PORTRAIT
@@ -109,6 +111,13 @@ def _section(section, profile):
     section.top_margin, section.bottom_margin = Pt(p.margin_top), Pt(p.margin_bottom)
     section.left_margin = Pt(p.margin_x + (p.spine if p.panels == 1 else 0))
     section.right_margin = Pt(p.margin_x)
+    if p.vertical and p.panels == 1 and font is not None:
+        # Word includes font-box overhang in its trailing line frame. Keep ink
+        # positions referenced from the right margin while admitting the last lane.
+        overhang = (
+            max(0, font.face.ascender - font.face.descender - 1) * p.font_size + 0.75
+        )
+        section.left_margin = Pt(max(0, p.margin_x + p.spine - overhang))
     section.header_distance = section.footer_distance = Pt(0)
     sp = section._sectPr
     for name in ("w:docGrid", "w:textDirection", "w:pgBorders"):
@@ -145,7 +154,11 @@ def _run(
     run.font.color.rgb = RGBColor.from_string(color[1:])
     rp.append(element("w:snapToGrid", val="0"))
     if pitch is not None:
-        rp.append(element("w:spacing", val=round((pitch - size) * 20)))
+        rp.append(
+            element(
+                "w:spacing", val=math.floor((pitch - round(size * 2) / 2) * 20 + 1e-8)
+            )
+        )
     if combine_id is not None:
         rp.append(element("w:eastAsianLayout", id=combine_id, combine="1"))
     if raise_by is not None:
@@ -173,7 +186,21 @@ def _text(paragraph, text, font, p, size, color):
         )
         return
     if p.punctuation == "keep":
-        _run(paragraph, "".join(chars), font, size, color, p.cell_advance)
+        buffer = []
+        previous = None
+        for char in chars:
+            current = (
+                p.punctuation_color
+                if p.punctuation_color and char in PUNCTUATION
+                else color
+            )
+            if previous is not None and current != previous:
+                _run(paragraph, "".join(buffer), font, size, previous, p.cell_advance)
+                buffer = []
+            buffer.append(char)
+            previous = current
+        if buffer:
+            _run(paragraph, "".join(buffer), font, size, previous, p.cell_advance)
         return
     # Small, raised punctuation shares the previous character's advance. Runs
     # remain native text; this does not pin them to a page or column coordinate.
@@ -190,7 +217,15 @@ def _text(paragraph, text, font, p, size, color):
             small = round(size * 0.38 * 2) / 2
             _run(paragraph, chars[i], font, size, color, p.cell_advance - small)
             mark = "。" if chars[i + 1] in "。.!?！？" else "、"
-            _run(paragraph, mark, font, small, color, small, raise_by=size * 0.42)
+            _run(
+                paragraph,
+                mark,
+                font,
+                small,
+                p.punctuation_color or color,
+                small,
+                raise_by=size * 0.42,
+            )
             i += 2
         else:
             buffer.append(chars[i])
@@ -241,7 +276,7 @@ def _anchored_textbox(paragraph, box, paragraph_glyph, font, profile, serial):
         pict, "{" + v + "}rect", id=f"BambooAnnotation{serial}", stroked="f", filled="f"
     )
     if profile.vertical:
-        if box.kind == "top":
+        if box.kind == "top" or box.block < 0 or box.flow:
             left, top, hrel, vrel = (
                 box.y,
                 profile.width - box.x - box.width,
@@ -253,7 +288,7 @@ def _anchored_textbox(paragraph, box, paragraph_glyph, font, profile, serial):
             top = paragraph_glyph.x + paragraph_glyph.width - box.x - box.width
             hrel, vrel = "char", "line"
     else:
-        if box.kind == "top":
+        if box.kind == "top" or box.block < 0 or box.flow:
             left, top, hrel, vrel = box.x, box.y, "page", "page"
         else:
             left, top = box.x - paragraph_glyph.x, box.y - paragraph_glyph.y
@@ -278,7 +313,19 @@ def _anchored_textbox(paragraph, box, paragraph_glyph, font, profile, serial):
     native.paragraph_format.space_before = native.paragraph_format.space_after = Pt(0)
     native.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
     native.paragraph_format.line_spacing = Pt(box.size)
-    _run(native, box.text, font, box.size, profile.accent, box.size * 1.2)
+    cursor = 0
+    for end in (*box.text_breaks, len(box.text)):
+        if cursor:
+            native.add_run().add_break()
+        _run(
+            native,
+            box.text[cursor:end],
+            font,
+            box.size,
+            box.color or profile.accent,
+            box.size * 1.2,
+        )
+        cursor = end
     paragraph.add_run()._element.append(pict)
 
 
@@ -369,8 +416,39 @@ def write_flow(doc, layout, font, decorate=None):
             if g.block >= 0:
                 paragraph_glyphs.setdefault(g.block, g)
     shape_id = 30000
+    active_begin = 0
+
+    def append_continuations(begin):
+        nonlocal shape_id
+        ranges = layout.sections
+        info = next((s for s in ranges if s["block_start"] == begin), None)
+        if info is None:
+            return
+        index = ranges.index(info)
+        end_page = (
+            ranges[index + 1]["page_offset"]
+            if index + 1 < len(ranges)
+            else len(layout.pages)
+        )
+        for page in layout.pages[info["page_offset"] : end_page]:
+            tail = [b for b in page.annotations if b.block < 0]
+            if not tail:
+                continue
+            paragraph = doc.add_paragraph()
+            paragraph.paragraph_format.page_break_before = True
+            paragraph.paragraph_format.line_spacing = Pt(1)
+            paragraph.paragraph_format.space_before = (
+                paragraph.paragraph_format.space_after
+            ) = Pt(0)
+            for box in tail:
+                _anchored_textbox(paragraph, box, None, font, p, shape_id)
+                shape_id += 1
+
     for bi, block in enumerate(layout.book.blocks):
         if bi in boundaries:
+            if bi > 0:
+                append_continuations(active_begin)
+            active_begin = bi
             end, spec = boundaries[bi]
             p = spec.profile
             section = (
@@ -378,7 +456,7 @@ def write_flow(doc, layout, font, decorate=None):
                 if bi == 0
                 else doc.add_section(WD_SECTION_START.NEW_PAGE)
             )
-            _section(section, p)
+            _section(section, p, font)
             if bi > 0:
                 section.header.is_linked_to_previous = False
                 section.footer.is_linked_to_previous = False
@@ -472,7 +550,16 @@ def write_flow(doc, layout, font, decorate=None):
                     for box in relevant:
                         if box.offset == offset:
                             _anchored_textbox(
-                                paragraph, box, paragraph_glyphs[bi], font, p, shape_id
+                                paragraph,
+                                box,
+                                (
+                                    glyphs[(box.block, box.inline, box.offset)]
+                                    if box.flow
+                                    else paragraph_glyphs[bi]
+                                ),
+                                font,
+                                p,
+                                shape_id,
                             )
                             shape_id += 1
                     cursor = offset
@@ -480,5 +567,6 @@ def write_flow(doc, layout, font, decorate=None):
         paragraph._element.append(element("w:bookmarkEnd", id=bi + 100))
         previous = paragraph
         numbered.flush()
+    append_continuations(active_begin)
     footnotes.finish()
     clean_styles(doc)

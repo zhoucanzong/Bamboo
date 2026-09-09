@@ -414,7 +414,7 @@ def _compose_flow(book: Book, display_start=1, note_start=0) -> Layout:
                             bi,
                             ii,
                             offset,
-                            p.ink,
+                            p.punctuation_color or p.ink,
                         )
                     )
                     last = None  # Consecutive marks get a real cell, never overlap.
@@ -434,6 +434,12 @@ def _compose_flow(book: Book, display_start=1, note_start=0) -> Layout:
                 x, y = position()
                 role = block.kind if block.kind in {"heading", "commentary"} else "body"
                 color = p.accent if inline.kind == "emphasis" else (style.ink or p.ink)
+                if (
+                    char in PUNCTUATION
+                    and inline.kind != "label"
+                    and p.punctuation_color
+                ):
+                    color = p.punctuation_color
                 g = Glyph(
                     char.translate(VERTICAL) if p.vertical else char,
                     x,
@@ -535,7 +541,7 @@ def _compose_flow(book: Book, display_start=1, note_start=0) -> Layout:
     )
     from .annotations import add_annotations
 
-    result = add_annotations(result)
+    result = add_annotations(result, first_folio=display_start)
     validate_layout(result)
     return result
 
@@ -612,7 +618,12 @@ def compose(book: Book) -> Layout:
                 for g in page.glyphs
             )
             boxes = tuple(
-                replace(b, id=global_id(b.id), block=b.block + begin)
+                replace(
+                    b,
+                    id=global_id(b.id),
+                    block=b.block + begin if b.block >= 0 else -1,
+                    source_block=b.source_block + begin if b.source_block >= 0 else -1,
+                )
                 for b in page.annotations
             )
             pages.append(
@@ -658,7 +669,7 @@ def validate_layout(layout):
     for page in layout.pages:
         p = page.profile or layout.book.profile
         annotation_expected = {
-            (box.id, offset)
+            (box.id, box.text_offset + offset)
             for box in page.annotations
             for offset, _ in clusters(box.text)
         }

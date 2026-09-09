@@ -66,6 +66,10 @@ def render(
         )
     font = resolve_font(layout, font_path, font_index, extra_text=extra_text)
     warnings = list(layout.warnings)
+    from .fonts import available_fonts
+
+    if book.font != "auto" and book.font not in available_fonts() and font_path is None:
+        warnings.append("所选字体不可用，已使用默认字体导出。")
     if "docx" in formats:
         warnings.append(
             "DOCX 图片模式以整页图片保存，正文不支持重排。"
@@ -78,7 +82,11 @@ def render(
             warnings.append(
                 "脚注在 DOCX 中是原生随页脚注；固定布局 PDF/HTML 当前以随文双行小注表达。"
             )
-        if docx_mode == "flow" and book.annotations:
+        if docx_mode == "flow" and any(n.flow for n in book.annotations):
+            warnings.append(
+                "自动续排批注按当前版面生成可编辑的分页文字框；Word 中更改正文分页后，请在简牍原稿中修改并重新导出。"
+            )
+        if docx_mode == "flow" and any(not n.flow for n in book.annotations):
             warnings.append(
                 "短旁注原生随字流动；长旁批与眉批使用可编辑锚定框。长旁批跟随段落，段内增删文字后需要重新导出来更新精确位置；文本框不能自动跨页续框。"
             )
@@ -145,7 +153,7 @@ def render(
         manifest = {
             "schema_version": 1,
             "engine": "bamboo",
-            "engine_version": "0.6.0",
+            "engine_version": "0.7.0",
             "title": book.title,
             "pages": len(layout.pages),
             "units": "pt",

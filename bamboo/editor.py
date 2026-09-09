@@ -296,6 +296,7 @@ class EditorSession:
             "set_metadata",
             "set_profile",
             "set_direction",
+            "set_font",
         }:
             raise BambooError("请通过专用记录编辑器修改这类文档")
         if kind == "set_special":
@@ -564,6 +565,8 @@ class EditorSession:
             draft["blocks"][:0] = cover
             draft["ids"][:0] = ids
             self._collapse(draft, Position(ids[0], len(title)))
+        elif kind == "set_font":
+            draft["book"] = replace(draft["book"], font=command.get("font", "auto"))
         elif kind == "set_metadata":
             values = command.get("values", {})
             if set(values) - {"title", "volume", "author"}:
@@ -580,9 +583,30 @@ class EditorSession:
                 placement=command.get("placement", "side"),
                 columns=command.get("columns", 1),
                 extent=command.get("extent", 12),
+                flow=command.get("flow", False),
+                font_scale=command.get("font_scale", 0.5),
+                color=command.get("color", ""),
             )
             draft["notes"].append(
                 {"note": n, "block_id": pos.block_id, "offset": pos.offset}
+            )
+        elif kind == "update_annotation":
+            index = command.get("index")
+            if type(index) is not int or not 0 <= index < len(draft["notes"]):
+                raise BambooError("批注不存在")
+            values = command.get("values", {})
+            if set(values) - {
+                "text",
+                "placement",
+                "columns",
+                "extent",
+                "flow",
+                "font_scale",
+                "color",
+            }:
+                raise BambooError("无效批注属性")
+            draft["notes"][index]["note"] = replace(
+                draft["notes"][index]["note"], **values
             )
         elif kind == "remove_annotation":
             index = command.get("index")
@@ -720,7 +744,11 @@ class EditorSession:
                 )
             fingerprints = tuple(
                 hashlib.sha256(
-                    json.dumps(asdict(p), ensure_ascii=False, sort_keys=True).encode()
+                    json.dumps(
+                        {"page": asdict(p), "font": self.book.font},
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    ).encode()
                 ).hexdigest()
                 for p in result.pages
             )

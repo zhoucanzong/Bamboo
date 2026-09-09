@@ -83,6 +83,23 @@ def page_style_presets():
         spine_rules=False,
     )
     return {
+        "manuscript-notes": (
+            "朱批手稿",
+            PRESETS["blank"].updated(
+                width=680,
+                height=900,
+                margin_x=42,
+                margin_top=220,
+                margin_bottom=40,
+                columns=14,
+                rows=18,
+                font_size=24,
+                ink="#111111",
+                accent="#d71920",
+                punctuation="judou",
+                punctuation_color="#d71920",
+            ),
+        ),
         "red-preface": ("朱栏序言", red),
         "poetry-page": ("诗文疏排", red.updated(rows=18, font_size=18)),
         "dense-classic": ("典籍密排", red.updated(rows=26, columns=12, font_size=14)),
@@ -238,6 +255,10 @@ def page_style_presets():
 
 
 PAGE_STYLE_DESCRIPTIONS = {
+    "manuscript-notes": (
+        "单页竖排",
+        "黑字正文、朱色句读与宽眉批留白，适合带密集朱批的手稿。",
+    ),
     "red-preface": ("古籍双面", "朱色外框与浅红界栏，适合序言及书前说明。"),
     "poetry-page": ("古籍双面", "减少每栏字数，保留诗句分行与疏朗留白。"),
     "dense-classic": ("古籍双面", "小字密栏，适合篇幅较长的典籍正文。"),
@@ -268,6 +289,29 @@ def page_style_sample(key):
     from .model import Book, Block, Inline
 
     name, profile = page_style_presets()[key]
+    if key == "manuscript-notes":
+        from .model import Annotation
+
+        return Book(
+            name,
+            (
+                Block((Inline("手稿朱批"),), kind="heading"),
+                Block(
+                    (
+                        Inline(
+                            "山窗日暖竹影入帘，展卷读书心与古人相接。读书贵在明理，细读而深思。"
+                        ),
+                    )
+                ),
+            ),
+            profile=profile,
+            annotations=(
+                Annotation("此处从景物写到读书，承上启下。", 1, flow=True, extent=100),
+                Annotation(
+                    "读书贵在会心", 1, offset=12, placement="top", columns=2, extent=4
+                ),
+            ),
+        )
     return Book(
         name,
         (

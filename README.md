@@ -6,7 +6,7 @@
 
 从纸面输入，到成书导出。
 
-横竖排 · 16 种页面样式 · 册簿 · 族谱 · 工尺谱
+横竖排 · 17 种页面样式 · 册簿 · 族谱 · 工尺谱
 
 [快速开始](#快速开始) · [专用文档](#专用文档) · [页面样式](#页面样式) · [导出与分享](#导出与分享) · [文档](#文档)
 
@@ -32,6 +32,23 @@
 
 </details>
 
+## 朱批手稿
+
+黑字正文、朱色句读、栏间旁批与多栏眉批可以组合排版。批注可分别调整颜色、字号和小栏数；开启自动续排后，长批注会利用栏间空位续栏或续页。点击红色批注即可编辑。
+
+选择“朱批手稿”页面样式，在字体选项中选择楷体或霞鹜文楷，开启“对页预览”可并排查看两页。未安装文楷时，可点击“获取霞鹜文楷”，或运行 `bamboo fonts --install-wenkai` 下载到本机缓存。
+
+[打开朱批手稿样例](examples/manuscript-notes.json)
+
+<details>
+<summary>查看黑字朱批与红色句读排版</summary>
+
+![朱批手稿的两页排版效果](docs/assets/manuscript.png)
+
+</details>
+
+Word 保留可编辑正文与批注文字框。密集朱批按导出时的页内位置排放；在 Word 中改变正文分页后，应在简牍原稿中修改并重新导出。
+
 ## 快速开始
 
 需要 **Python 3.9 或更新版本**。
@@ -42,6 +59,7 @@ cd Bamboo
 
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -e .
 
 bamboo edit
@@ -124,17 +142,17 @@ bamboo edit --no-browser --port 8765 --workspace output/editor
 | 类别 | 可选样式 |
 | --- | --- |
 | **古籍双面** | 朱栏序言、诗文疏排、典籍密排、素墨古籍、米纸刻本 |
-| **单页竖排** | 无装饰书页、单页墨栏、蓝栏抄本、大字疏排、袖珍小本、宽栏批校、序跋留白、经文长行 |
+| **单页竖排** | 朱批手稿、无装饰书页、单页墨栏、蓝栏抄本、大字疏排、袖珍小本、宽栏批校、序跋留白、经文长行 |
 | **横排阅读** | 横排书页、横排研读、横排双栏 |
 
-点击 **页面样式** 可查看全部 16 种预览。应用到当前篇章，或从当前段落另起一篇；已录入的正文会随新版式重排。
+点击 **页面样式** 可查看全部 17 种预览。应用到当前篇章，或从当前段落另起一篇；已录入的正文会随新版式重排。
 
 [查看页面样式选集](examples/page-styles.json) · [查看题签与诗文样例](examples/styles.json)
 
 <details>
 <summary>展开页面样式库与鱼尾符号库</summary>
 
-![16 种页面样式预览](docs/assets/page-styles.png)
+![17 种页面样式预览](docs/assets/page-styles.png)
 
 6 种鱼尾样式各支持上、下、左、右方向。题签边框可选无、单线或双线；文字方印支持朱文、白文，使用当前文档字体。
 
@@ -182,3 +200,9 @@ bamboo render examples/register.json --formats docx -o output/register
 需要指定字体时，可使用 `--font /path/to/font.otf`。浏览器测试的运行方式见 [验证记录](docs/validation.md)。
 
 </details>
+
+## 许可证
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
+
+本许可适用于简牍自有代码，第三方组件遵循各自许可证，详见 [第三方组件说明](THIRD_PARTY_NOTICES.md)。

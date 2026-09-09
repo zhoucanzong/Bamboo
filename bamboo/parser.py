@@ -45,6 +45,7 @@ def from_dict(data):
             "annotations",
             "styles",
             "special",
+            "font",
         },
         "文档",
     )
@@ -134,6 +135,7 @@ def from_dict(data):
         tuple(notes),
         tuple(styles),
         special_from_dict(data["special"]) if data.get("special") is not None else None,
+        data.get("font", "auto"),
     )
 
 

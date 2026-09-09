@@ -179,6 +179,7 @@ class Profile:
     rule_color: str = "#4a4136"
     paper: str = "#ffffff"
     accent: str = "#9b3028"
+    punctuation_color: str = ""
     border_color: str = ""
     line_color: str = ""
     fish_tail_color: str = ""
@@ -253,7 +254,13 @@ class Profile:
                 r"#[0-9a-fA-F]{6}", getattr(self, key)
             ):
                 raise BambooError(f"{key} 必须是 #RRGGBB 颜色")
-        for key in ("border_color", "line_color", "fish_tail_color", "spine_ink"):
+        for key in (
+            "border_color",
+            "line_color",
+            "fish_tail_color",
+            "spine_ink",
+            "punctuation_color",
+        ):
             value = getattr(self, key)
             if not isinstance(value, str) or (
                 value and not re.fullmatch(r"#[0-9a-fA-F]{6}", value)
@@ -414,6 +421,9 @@ class Annotation:
     placement: str = "side"
     columns: int = 1
     extent: int = 12
+    flow: bool = False
+    font_scale: float = 0.5
+    color: str = ""
 
     def __post_init__(self):
         if (
@@ -431,7 +441,21 @@ class Annotation:
             raise BambooError("批注列数必须为 1 到 4")
         if type(self.extent) is not int or not 1 <= self.extent <= 100:
             raise BambooError("批注每列字数必须为 1 到 100")
-        if len(self.text) > self.columns * self.extent:
+        if type(self.flow) is not bool:
+            raise BambooError("续排设置必须为布尔值")
+        if (
+            type(self.font_scale) not in (int, float)
+            or not math.isfinite(self.font_scale)
+            or not 0.2 <= self.font_scale <= 1
+        ):
+            raise BambooError("批注字号比例应为 0.2～1")
+        if not isinstance(self.color, str) or (
+            self.color and not re.fullmatch(r"#[0-9a-fA-F]{6}", self.color)
+        ):
+            raise BambooError("批注颜色应为 #RRGGBB 或留空继承")
+        if len(self.text) > 20000:
+            raise BambooError("单条批注不能超过 20000 字")
+        if not self.flow and len(self.text) > self.columns * self.extent:
             raise BambooError("批注超过指定区域容量，请增加列数或每列字数")
 
 
@@ -445,10 +469,18 @@ class Book:
     annotations: Tuple[Annotation, ...] = ()
     styles: Tuple[TextStyle, ...] = ()
     special: Any = None
+    font: str = "auto"
 
     def __post_init__(self):
         from .structured import validate
 
+        if not isinstance(self.font, str) or self.font not in {
+            "auto",
+            "songti",
+            "kaiti",
+            "wenkai",
+        }:
+            raise BambooError("未知字体选项")
         validate(self.special)
         if self.special is not None and (
             len(self.blocks) != 1 or self.blocks[0].inlines or self.annotations
@@ -553,6 +585,14 @@ class AnnotationBox:
     height: float
     size: float
     text: str
+    text_offset: int = 0
+    part: int = 0
+    flow: bool = False
+    color: str = ""
+    source_block: int = -1
+    source_inline: int = 0
+    source_offset: int = 0
+    text_breaks: Tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)

@@ -318,7 +318,7 @@ def test_page_style_gallery_previews_filters_and_all_new_choices(editor):
     page.keyboard.insert_text("页面样式保留正文")
     expect(page.locator("#word-count")).to_have_text("8 字")
     page.locator("#page-templates-side").click()
-    expect(page.locator(".page-style-card")).to_have_count(16)
+    expect(page.locator(".page-style-card")).to_have_count(17)
     expect(page.locator("#page-style-apply")).to_be_disabled()
     page.set_viewport_size({"width": 1480, "height": 1400})
     page.evaluate("document.fonts.ready")
@@ -491,3 +491,39 @@ def test_gongche_editor_alignment_delete_move_and_export(editor):
         with page.expect_download() as download:
             page.locator("#modal-form button[type=submit]").click()
         assert download.value.failure() is None
+
+
+def test_manuscript_spread_font_punctuation_and_editable_notes(editor):
+    page, app, folder, expect, url = editor
+    sample = Path(__file__).resolve().parents[1] / "examples/manuscript-notes.json"
+    page.locator("#file").set_input_files(str(sample))
+    expect(page.locator("#page-count")).to_have_text("2 页")
+    page.evaluate("document.fonts.ready")
+    page.locator("#spread-view").click()
+    expect(page.locator("#canvas")).to_have_class("spread")
+    first, second = [page.locator(".page").nth(i).bounding_box() for i in range(2)]
+    assert first["x"] > second["x"]
+    assert abs(first["y"] - second["y"]) < 2
+    from bamboo.fonts import available_fonts
+
+    if "wenkai" in available_fonts():
+        expect(page.locator("#issues")).not_to_be_visible()
+    assert current(app).book.font == "wenkai"
+    page.screenshot(path=str(folder / "manuscript-spread.png"))
+    page.locator(".annotation-link").first.click()
+    expect(page.locator("#modal")).to_be_visible()
+    page.locator("#modal-text").fill("修改后的朱批")
+    page.locator("#modal-color").fill("#ff0000")
+    page.locator("#modal-form button[type=submit]").click()
+    expect(page.locator("#annotation-list")).to_contain_text("修改后的朱批")
+    assert any(n.text == "修改后的朱批" for n in current(app).book.annotations)
+    page.locator("#undo").click()
+    expect(page.locator("#annotation-list")).not_to_contain_text("修改后的朱批")
+    page.locator("#appearance-side").click()
+    page.locator("#modal-punctuation_color").fill("#b80000")
+    page.locator("#modal-form button[type=submit]").click()
+    from bamboo.fonts import available_fonts
+
+    if "wenkai" in available_fonts():
+        expect(page.locator("#issues")).not_to_be_visible()
+    assert current(app).book.blocks[0].section.profile.punctuation_color == "#b80000"

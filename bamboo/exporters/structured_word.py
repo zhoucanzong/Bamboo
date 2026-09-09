@@ -309,6 +309,7 @@ def import_structured(doc, saved):
             author=doc.core_properties.author or saved.author,
             profile=saved.profile,
             special=special,
+            font=saved.font,
         )
         return EditorSession(book), [
             "专用文档已按 Word 中的实际记录字段恢复，派生内容会重新计算。"

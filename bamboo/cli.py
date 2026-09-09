@@ -17,13 +17,19 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="bamboo", description="Bamboo 简牍：古籍与传统文书编辑排版"
     )
-    parser.add_argument("--version", action="version", version="Bamboo 0.6.0")
+    parser.add_argument("--version", action="version", version="Bamboo 0.7.0")
     sub = parser.add_subparsers(dest="command")
     edit = sub.add_parser("edit", help="打开可直接编辑的界面")
     edit.add_argument("--port", type=int, default=8765)
     edit.add_argument("--workspace", type=Path, default=Path("output/editor"))
     edit.add_argument("--no-browser", action="store_true")
     sub.add_parser("presets", help="列出内置版式")
+    fonts = sub.add_parser("fonts", help="查看字体或获取霞鹜文楷")
+    fonts.add_argument(
+        "--install-wenkai",
+        action="store_true",
+        help="下载固定版本的 OFL 字体到本机缓存",
+    )
     for name in ("render", "check", "layout"):
         cmd = sub.add_parser(
             name,
@@ -66,6 +72,12 @@ def main(argv=None):
                 open_browser=not getattr(args, "no_browser", False),
             )
             return 0
+        elif args.command == "fonts":
+            from .fonts import available_fonts, install_wenkai
+
+            if args.install_wenkai:
+                install_wenkai()
+            result = available_fonts()
         elif args.command == "presets":
             result = {k: asdict(v) for k, v in PRESETS.items()}
         else:

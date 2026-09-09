@@ -31,6 +31,7 @@ class EditorApplication:
         self.token = secrets.token_urlsafe(32)
         blank = EditorSession()
         self.font = resolve_font(blank.layout(), subset_font=False)
+        self._fonts = {"auto": self.font}
 
     def path(self, identifier):
         if not isinstance(identifier, str) or not re.fullmatch(
@@ -101,7 +102,19 @@ class EditorApplication:
             )
         return items
 
+    def document_font(self, key):
+        if key not in self._fonts:
+            from dataclasses import replace
+
+            blank = EditorSession()
+            self._fonts[key] = resolve_font(
+                replace(blank.layout(), book=replace(blank.book, font=key)),
+                subset_font=False,
+            )
+        return self._fonts[key]
+
     def view(self, session):
+        font = self.document_font(session.book.font)
         layout = session.layout()
         state = session.state()
         pages = []
@@ -109,10 +122,8 @@ class EditorApplication:
         for pi, page in enumerate(layout.pages):
             item = asdict(page)
             for raw, glyph in zip(item["glyphs"], page.glyphs):
-                raw["baseline_x"], raw["baseline_y"] = self.font.origin(glyph)
-                missing.update(
-                    c for c in glyph.text if not self.font.face.has_glyph(ord(c))
-                )
+                raw["baseline_x"], raw["baseline_y"] = font.origin(glyph)
+                missing.update(c for c in glyph.text if not font.face.has_glyph(ord(c)))
                 if glyph.block >= 0:
                     block = session.book.blocks[glyph.block]
                     base = sum(len(i.text) for i in block.inlines[: glyph.inline])
@@ -140,8 +151,18 @@ class EditorApplication:
             "changed_pages": session.changed_pages,
             "issues": issues,
             "layout_valid": not issues,
-            "font_family": self.font.family,
+            "font_family": font.family,
         }
+        from .fonts import available_fonts
+
+        choices = available_fonts()
+        state["view"]["fonts"] = [["auto", "默认字体"]] + [
+            [key, value["name"]] for key, value in choices.items()
+        ]
+        if session.book.font != "auto" and session.book.font not in choices:
+            state["view"]["issues"].append(
+                "所选字体在此电脑不可用，预览已使用默认字体。"
+            )
         state["view"]["boundaries"] = {
             identifier: sorted({o for o, _ in clusters(block.text)} | {len(block.text)})
             for identifier, block in zip(session.block_ids, session.book.blocks)
@@ -263,7 +284,13 @@ def make_handler(app):
                         ),
                     )
                 elif path == "/assets/font":
-                    self._send(app.font.data, app.font.mime)
+                    from urllib.parse import parse_qs
+
+                    key = parse_qs(urlparse(self.path).query).get("font", ["auto"])[0]
+                    if key not in {"auto", "songti", "kaiti", "wenkai"}:
+                        raise BambooError("未知字体")
+                    font = app.document_font(key)
+                    self._send(font.data, font.mime)
                 elif path == "/api/documents":
                     self._authorized()
                     self._send({"documents": app.list_documents()})
@@ -301,6 +328,15 @@ def make_handler(app):
                 self._authorized()
                 data = self._body()
                 path = urlparse(self.path).path
+                if path == "/api/fonts":
+                    from .fonts import install_wenkai
+
+                    if data.get("install") != "wenkai":
+                        raise BambooError("未知字体下载请求")
+                    install_wenkai()
+                    app._fonts.pop("wenkai", None)
+                    self._send({"installed": "wenkai"})
+                    return
                 if path == "/api/documents":
                     if data.get("kind"):
                         from .structured import from_dict

@@ -444,7 +444,7 @@ def import_docx(data):
         for text in floating:
             blocks.append(Block((Inline(text),), "commentary"))
         if floating:
-            warnings.append("浮动批注文字已作为随段段后注保留，其原始位置暂未恢复。")
+            warnings.append("浮动批注文字已作为段后注保留，其原始位置暂未恢复。")
             floating.clear()
     book = Book(
         doc.core_properties.title or "导入的文档",
@@ -453,6 +453,7 @@ def import_docx(data):
         volume="",
         profile=profile,
         styles=saved_book.styles if saved_book else (),
+        font=saved_book.font if saved_book else "auto",
     )
     remaining = [
         (

@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const token = document.querySelector('meta[name="bamboo-token"]').content;
 const SVG = 'http://www.w3.org/2000/svg';
 let state = null, selection = null, queue = Promise.resolve(), scale = 1.15, dragging = false, composing = false;
-let pending = 0, modalResolve = null;
+let pending = 0, modalResolve = null, spreadView = false;
 const cp = text => Array.from(text);
 
 function feedback(text, error=false) { $('feedback').textContent=text; $('feedback').classList.toggle('error',error); }
@@ -73,13 +73,21 @@ function positionInput(caret){
   if(!caret)return;const page=document.querySelector(`[data-page="${caret.page}"] svg`);if(!page)return;
   const r=page.getBoundingClientRect();$('input').style.left=(r.left+caret.x1*scale)+'px';$('input').style.top=(r.top+caret.y1*scale)+'px';
 }
+const documentFonts=new Map();
+function useDocumentFont(key){
+ const name='BambooDocument-'+key;
+ if(!documentFonts.has(key)){const face=new FontFace(name,`url(/assets/font?font=${encodeURIComponent(key)})`);document.fonts.add(face);documentFonts.set(key,face.load().catch(e=>feedback('字体加载失败：'+e.message,true)));}
+ $('canvas').style.setProperty('--document-font',name);
+}
 function render(next){
   state=next;selection=structuredClone(next.selection);
+  $('font-choice').replaceChildren(...(state.view.fonts||[['auto','默认字体']]).map(([value,label])=>{const o=document.createElement('option');o.value=value;o.textContent=label;return o;}));
+  $('font-choice').value=(state.view.fonts||[]).some(([key])=>key===state.book.font)?state.book.font:'auto';$('install-wenkai').hidden=(state.view.fonts||[]).some(([key])=>key==='wenkai');useDocumentFont(state.book.font||'auto');
   document.body.dataset.revision=String(state.revision);
   const profile=activeProfile(),vertical=profile.writing_mode==='vertical-rl';
   const viewportStyle=getComputedStyle($('viewport'));
   const available=$('viewport').clientWidth-parseFloat(viewportStyle.paddingLeft)-parseFloat(viewportStyle.paddingRight);
-  scale=$('zoom').value==='fit'?Math.min(1.2,Math.max(.35,available/Math.max(...state.view.pages.map((p,i)=>pageProfile(i).width)))):Number($('zoom').value);
+  scale=$('zoom').value==='fit'?Math.min(1.2,Math.max(.18,(available-(spreadView?24:0))/((spreadView?2:1)*Math.max(...state.view.pages.map((p,i)=>pageProfile(i).width))))):Number($('zoom').value);
   if(document.activeElement!==$('title'))$('title').value=state.book.title;$('undo').disabled=!state.can_undo;$('redo').disabled=!state.can_redo;
   $('font-size').value=profile.font_size;$('rows').value=profile.rows;$('columns').value=profile.columns;$('punctuation').value=profile.punctuation;
   $('rows-label').firstChild.nodeValue=vertical?'每栏字数':'每行字数';$('columns-label').firstChild.nodeValue=vertical?'每面栏数':'每页行数';
@@ -89,7 +97,7 @@ function render(next){
   $('page-count').textContent=state.view.pages.length+' 页';
   $('word-count').textContent=state.book.blocks.reduce((n,b)=>n+b.inlines.reduce((n,s)=>n+cp(s.text).length,0),0)+' 字';
   const issues=[...(state.import_warnings||[]),...state.view.issues];$('issues').hidden=!issues.length;$('issues').textContent=issues.join('　');
-  const canvas=$('canvas');canvas.replaceChildren();
+  const canvas=$('canvas');canvas.replaceChildren();canvas.classList.toggle('spread',spreadView);canvas.style.direction=spreadView&&state.book.profile.writing_mode==='vertical-rl'?'rtl':'ltr';
   $('text-style').replaceChildren(...state.view.styles.map(s=>{const o=document.createElement('option');o.value=s.key;o.textContent=s.name;return o;}));
   state.view.pages.forEach((page,index)=>{
     const profile=pageProfile(index);
@@ -98,17 +106,17 @@ function render(next){
     paper.append(svg('rect',{width:profile.width,height:profile.height,fill:profile.paper}));
     for(const l of page.lines)paper.append(svg('line',{x1:l.x1,y1:l.y1,x2:l.x2,y2:l.y2,stroke:l.color,'stroke-width':l.width}));
     for(const p of page.polygons)paper.append(svg('polygon',{points:p.points.map(p=>p.join(',')).join(' '),fill:p.color}));
-    for(const g of page.glyphs){const t=svg('text',{x:g.baseline_x,y:g.baseline_y,'font-size':g.size,fill:g.color,stroke:g.bold?g.color:'none','stroke-width':g.bold?g.size*.022:0});t.textContent=g.text;if(g.object_id){t.dataset.object=g.object_id;t.dataset.field=g.field;}if(g.reference_id&&g.block<0){t.dataset.reference=g.reference_id;t.classList.add('reference-link');}paper.append(t);}
+    for(const g of page.glyphs){const t=svg('text',{x:g.baseline_x,y:g.baseline_y,'font-size':g.size,fill:g.color,stroke:g.bold?g.color:'none','stroke-width':g.bold?g.size*.022:0});t.textContent=g.text;if(g.annotation_id?.startsWith('annotation-')){t.dataset.annotation=g.annotation_id.split('-')[1];t.classList.add('annotation-link');}if(g.object_id){t.dataset.object=g.object_id;t.dataset.field=g.field;}if(g.reference_id&&g.block<0){t.dataset.reference=g.reference_id;t.classList.add('reference-link');}paper.append(t);}
     if(!state.book.blocks.some(b=>b.inlines.length)&&index===0){const hint=svg('text',{x:profile.width/2,y:profile.height/2,'text-anchor':'middle',class:'empty-hint'});hint.textContent='点击纸面，开始书写';paper.append(hint);}
     paper.append(svg('g',{class:'selection-layer'}));shell.append(paper);canvas.append(shell);
     paper.addEventListener('pointerdown',event=>{
-      if(event.button!==0)return;if(state.book.special){event.preventDefault();openStructured(state.book.special.kind,event.target.dataset.object,event.target.dataset.field);return;}if(event.target.dataset.reference){event.preventDefault();editNumberedNote(event.target.dataset.reference);return;}event.preventDefault();const r=paper.getBoundingClientRect(),p=localHit(index,(event.clientX-r.left)/scale,(event.clientY-r.top)/scale);
+      if(event.button!==0)return;if(event.target.dataset.annotation!==undefined){event.preventDefault();editAnnotation(Number(event.target.dataset.annotation));return;}if(state.book.special){event.preventDefault();openStructured(state.book.special.kind,event.target.dataset.object,event.target.dataset.field);return;}if(event.target.dataset.reference){event.preventDefault();editNumberedNote(event.target.dataset.reference);return;}event.preventDefault();const r=paper.getBoundingClientRect(),p=localHit(index,(event.clientX-r.left)/scale,(event.clientY-r.top)/scale);
       selection=event.shiftKey?{anchor:selection.anchor,focus:p}:{anchor:p,focus:p};dragging=true;paper.setPointerCapture(event.pointerId);paintSelection();$('input').focus({preventScroll:true});
     });
     paper.addEventListener('pointermove',event=>{if(!dragging)return;const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.page');const actual=target?Number(target.dataset.page):index;const element=target?.querySelector('svg')||paper,r=element.getBoundingClientRect();selection.focus=localHit(actual,(event.clientX-r.left)/scale,(event.clientY-r.top)/scale);paintSelection();});
     paper.addEventListener('pointerup',()=>{dragging=false;syncSelection();});
   });
-  $('annotation-list').replaceChildren();state.book.annotations.forEach((note,index)=>{const item=document.createElement('div'),remove=document.createElement('button');remove.textContent='移除';remove.onclick=()=>command({type:'remove_annotation',index});item.append(remove,document.createTextNode((note.placement==='top'?'眉批：':'旁批：')+note.text));$('annotation-list').append(item);});
+  $('annotation-list').replaceChildren();state.book.annotations.forEach((note,index)=>{const item=document.createElement('div'),remove=document.createElement('button'),edit=document.createElement('button');remove.textContent='移除';remove.onclick=()=>command({type:'remove_annotation',index});edit.textContent='编辑';edit.onclick=()=>editAnnotation(index);item.append(remove,edit,document.createTextNode((note.placement==='top'?'眉批：':'旁批：')+note.text));$('annotation-list').append(item);});
   (state.view.numbered_notes||[]).forEach((note,index)=>{const item=document.createElement('div'),edit=document.createElement('button');edit.textContent='编辑';edit.onclick=()=>editNumberedNote(note.target);item.append(edit,document.createTextNode(`编号 ${index+1} · ${note.label||'注文'}：${note.text}`));$('annotation-list').append(item);});
   const special=state.book.special;
   for(const id of ['block-kind','text-style','emphasis','plain','label','note','numbered-note','ruby','footnote','annotation','preset','rows','columns','punctuation','indent','styles','chapter','cover','seal','page-templates','page-templates-side','symbols'])$(id).disabled=!!special;
@@ -189,7 +197,8 @@ $('emphasis').onclick=()=>command({type:'format_range',kind:'emphasis'});$('plai
 $('note').onclick=async()=>{if(!equal(selection.anchor,selection.focus)){command({type:'format_range',kind:'note'});return;}const answer=await modal('插入双行夹注','注释作为两列小字随正文排入。',[{name:'text',label:'夹注文字',multiline:true}]);if(answer)command({type:'insert_inline',kind:'note',text:answer.text});};
 $('footnote').onclick=async()=>{const answer=await modal('插入脚注','Word 导出使用原生页下注；页面预览当前以随文小注显示。',[{name:'text',label:'脚注文字',multiline:true}]);if(answer)command({type:'insert_inline',kind:'footnote',text:answer.text});};
 $('ruby').onclick=async()=>{if(equal(selection.anchor,selection.focus)){feedback('请先选中要加旁注的正文。',true);return;}const answer=await modal('添加短旁注','旁注与选中的正文一同流动。',[{name:'annotation',label:'旁注文字'}]);if(answer)command({type:'format_range',kind:'ruby',annotation:answer.annotation});};
-$('annotation').onclick=async()=>{const answer=await modal('添加旁批或眉批','批注锚定所选文字，需要为它预留栏间或上方空间。',[{name:'placement',label:'位置',value:'side',options:[['side','栏间旁批'],['top','正文上方眉批']]},{name:'text',label:'批注文字',multiline:true}]);if(answer)command({type:'add_annotation',placement:answer.placement,text:answer.text,extent:Math.max(12,cp(answer.text).length)});};
+$('annotation').onclick=()=>editAnnotation();
+$('font-choice').onchange=()=>command({type:'set_font',font:$('font-choice').value});
 $('label').onclick=async()=>{const a=await modal('注家标签','标签文字与边框可分别编辑。',[{name:'text',label:'标签文字',value:selectedText()||'集解'},{name:'boxed',label:'标签加框',checkbox:true,value:true}]);if(a)command({type:'insert_inline',kind:'label',text:a.text,boxed:a.boxed});};
 $('numbered-note').onclick=async()=>{const a=await modal('添加编号注释','在所选文字之后插入引用。编号随注释的插入、删除自动更新。',[{name:'annotation',label:'注家标签（可选）',value:'集解',required:false},{name:'text',label:'注文',multiline:true},{name:'boxed',label:'标签加框',checkbox:true,value:true}]);if(a)command({type:'add_numbered_note',annotation:a.annotation,text:a.text,boxed:a.boxed});};
 async function editNumberedNote(target){const note=(state.view.numbered_notes||[]).find(n=>n.target===target);if(!note)return;const a=await modal('编辑编号注释','正文引用与这条注文是关联对象。',[{name:'annotation',label:'注家标签（可选）',value:note.label,required:false},{name:'text',label:'注文',value:note.text,multiline:true,required:false},{name:'boxed',label:'标签加框',checkbox:true,value:note.boxed},{name:'remove',label:'移除这条注释及引用',checkbox:true,value:false}]);if(a)command(a.remove?{type:'remove_numbered_note',target}:{type:'update_numbered_note',target,text:a.text,annotation:a.annotation,boxed:a.boxed});}
@@ -212,13 +221,14 @@ async function appearance(){
     {name:'spine_ink',label:'版心文字颜色',type:'color',value:p.spine_ink||p.ink},
     {name:'ink',label:'正文颜色',type:'color',value:p.ink},
     {name:'accent',label:'强调与印章颜色',type:'color',value:p.accent},
+    {name:'punctuation_color',label:'句读颜色',type:'color',value:p.punctuation_color||p.ink},
     {name:'paper',label:'纸张颜色',type:'color',value:p.paper}]);
   const dependents=['spine_rules','fish_tail','show_title','show_volume','show_page_number','show_author'];
   for(const id of dependents)$('modal-'+id).onchange=e=>{if(e.target.checked)$('modal-spine').checked=true;};
   $('modal-spine').onchange=e=>{if(!e.target.checked)for(const id of dependents)$('modal-'+id).checked=false;};
   const clear=document.createElement('button');clear.type='button';clear.textContent='全部关闭';clear.className='element-button';clear.onclick=()=>{$('modal-border').value='none';$('modal-rules').checked=false;$('modal-spine').checked=false;for(const id of dependents)$('modal-'+id).checked=false;$('modal-paper').value='#ffffff';};$('modal-fields').append(clear);
   const a=await promise;if(!a)return;
-  command({type:'set_profile',values:{border:a.border,rules:a.rules,spine:a.spine?Number(a.spine_width):0,spine_rules:a.spine_rules,fish_tail:a.fish_tail,show_title:a.show_title,show_volume:a.show_volume,show_page_number:a.show_page_number,paper:a.paper,ink:a.ink,accent:a.accent,show_author:a.show_author,border_color:a.border_color,line_color:a.line_color,fish_tail_color:a.fish_tail_color,spine_ink:a.spine_ink}});
+  command({type:'set_profile',values:{border:a.border,rules:a.rules,spine:a.spine?Number(a.spine_width):0,spine_rules:a.spine_rules,fish_tail:a.fish_tail,show_title:a.show_title,show_volume:a.show_volume,show_page_number:a.show_page_number,paper:a.paper,punctuation_color:a.punctuation_color,ink:a.ink,accent:a.accent,show_author:a.show_author,border_color:a.border_color,line_color:a.line_color,fish_tail_color:a.fish_tail_color,spine_ink:a.spine_ink}});
 }
 $('appearance').onclick=appearance;$('appearance-side').onclick=appearance;
 $('symbols').onclick=async()=>{
@@ -322,3 +332,20 @@ $('page-style-category').onchange=paintPageStyleCards;
 $('page-style-new').onchange=()=>{$('page-style-apply').textContent=$('page-style-new').checked?'从当前段落应用':'应用到当前篇章';};
 for(const id of ['page-style-close','page-style-cancel'])$(id).onclick=()=>$('page-style-dialog').close();
 $('page-style-apply').onclick=async()=>{if(!chosenPageStyle)return;const preset=chosenPageStyle,start=$('page-style-new').checked;$('page-style-dialog').close();await command({type:'set_section',new:start,preset});};
+
+async function editAnnotation(index=null){
+ const note=index===null?null:state.book.annotations[index],p=activeProfile();
+ const a=await modal(note?'编辑批注':'添加旁批或眉批','批注锚定所选文字。自动续排会避开正文和其他批注，并在必要时续栏或续页。',[
+ {name:'placement',label:'位置',value:note?.placement||'side',options:[['side','栏间旁批'],['top','正文上方眉批']]},
+ {name:'text',label:'批注文字',value:note?.text||'',multiline:true},
+ {name:'flow',label:'自动续排',checkbox:true,value:note?.flow??true},
+ {name:'columns',label:'并排小栏数',type:'number',value:note?.columns||1},
+ {name:'extent',label:'每小栏最多字数',type:'number',value:note?.extent||100},
+ {name:'font_scale',label:'字号比例（相对正文）',type:'number',value:note?.font_scale??.5},
+ {name:'color',label:'批注颜色',type:'color',value:note?.color||p.accent}]);
+ if(a){const values={text:a.text,placement:a.placement,flow:a.flow,columns:Number(a.columns),extent:Number(a.extent),font_scale:Number(a.font_scale),color:a.color};await command(note?{type:'update_annotation',index,values}:{type:'add_annotation',...values});}
+}
+
+$('spread-view').onclick=()=>{spreadView=!spreadView;$('spread-view').setAttribute('aria-pressed',String(spreadView));$('spread-view').textContent=spreadView?'单页预览':'对页预览';const saved=structuredClone(selection);render(state);selection=saved;paintSelection();};
+
+$('install-wenkai').onclick=async()=>{try{await queue;$('install-wenkai').disabled=true;feedback('正在下载霞鹜文楷字体…');await json('/api/fonts',{install:'wenkai'});for(const face of document.fonts)if(face.family==='BambooDocument-wenkai')document.fonts.delete(face);documentFonts.delete('wenkai');await command({type:'set_font',font:'wenkai'});}catch(e){feedback(e.message,true);}finally{$('install-wenkai').disabled=false;}};
