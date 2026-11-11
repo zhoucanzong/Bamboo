@@ -172,6 +172,10 @@ PDF 与 HTML 使用同一版面。Word 的最终换行和分页由阅读器计�
 
 在 Word 中大量修改册簿记录、族谱框线或工尺谱合并结构后，建议回到简牍核对数据并重新排版。更多细节见 [格式说明](docs/typography.md) 与 [验证记录](docs/validation.md)。
 
+## MCP 服务与 Skill
+
+简牍提供本地 MCP 服务。客户端可以查看版式、创建和编辑原稿、检查分页与字体，导出 PDF、HTML 及流式 Word。安装可选依赖后，用 `bamboo mcp --workspace <目录>` 启动。详见[客户端配置与调用示例](docs/mcp.md)。面向智能助手的排版 Skill 单独维护在 [skill 分支](https://github.com/zhoucanzong/Bamboo/tree/skill)。
+
 ## 文档
 
 | 入口 | 内容 |

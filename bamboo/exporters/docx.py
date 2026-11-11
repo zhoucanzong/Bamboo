@@ -6,7 +6,7 @@ import hashlib
 import uuid
 from dataclasses import replace
 
-import fitz
+from .._pdf_backend import fitz
 from docx import Document
 from docx.enum.text import WD_LINE_SPACING
 from docx.oxml import OxmlElement

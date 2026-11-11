@@ -6,7 +6,7 @@ from io import BytesIO
 import os
 from pathlib import Path
 
-import fitz
+from ._pdf_backend import fitz
 from fontTools import subset
 from fontTools.ttLib import TTFont, TTCollection
 

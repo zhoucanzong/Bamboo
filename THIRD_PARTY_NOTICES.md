@@ -5,6 +5,7 @@ Apache License 2.0 适用于 Bamboo 自有代码，不替代第三方组件的�
 | 组件 | 用途 | 许可证来源 |
 | --- | --- | --- |
 | PyMuPDF / MuPDF | 字体测量、PDF 写出和渲染 | [AGPL 3.0 或 Artifex 商业许可](https://github.com/pymupdf/PyMuPDF) |
+| MCP Python SDK（可选） | 连接本地 MCP 客户端 | [MIT](https://github.com/modelcontextprotocol/python-sdk/blob/main/LICENSE) |
 | python-docx | 原生 Word 文件读写 | [MIT](https://github.com/python-openxml/python-docx/blob/master/LICENSE) |
 | fontTools | 字体读取与子集处理 | [MIT](https://github.com/fonttools/fonttools/blob/main/LICENSE) |
 | lxml | XML 处理，由 python-docx 引入 | [BSD 等相关声明](https://lxml.de/copyright.html) |

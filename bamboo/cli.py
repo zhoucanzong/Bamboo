@@ -19,6 +19,8 @@ def main(argv=None):
     )
     parser.add_argument("--version", action="version", version="Bamboo 0.7.0")
     sub = parser.add_subparsers(dest="command")
+    mcp = sub.add_parser("mcp", help="启动本机 MCP 服务（stdio）")
+    mcp.add_argument("--workspace", type=Path, required=True, help="MCP 原稿和导出文件的目录")
     edit = sub.add_parser("edit", help="打开可直接编辑的界面")
     edit.add_argument("--port", type=int, default=8765)
     edit.add_argument("--workspace", type=Path, default=Path("output/editor"))
@@ -71,6 +73,11 @@ def main(argv=None):
                 workspace=getattr(args, "workspace", "output/editor"),
                 open_browser=not getattr(args, "no_browser", False),
             )
+            return 0
+        elif args.command == "mcp":
+            from .mcp_server import make_server
+
+            make_server(args.workspace).run(transport="stdio")
             return 0
         elif args.command == "fonts":
             from .fonts import available_fonts, install_wenkai

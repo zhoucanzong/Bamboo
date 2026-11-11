@@ -1,6 +1,6 @@
 """Selectable vector PDF with embedded CJK font and page bookmarks."""
 
-import fitz
+from .._pdf_backend import fitz
 
 
 def rgb(value):
