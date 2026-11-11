@@ -1,0 +1,18 @@
+{
+  "title": "山窗读书记",
+  "preset": "blank",
+  "profile": {
+    "writing_mode": "vertical-rl",
+    "margin_top": 110,
+    "punctuation": "judou",
+    "punctuation_color": "#b52b30"
+  },
+  "blocks": [
+    {"kind": "heading", "text": "山窗读书记"},
+    {"inlines": [{"text": "山窗日暖，竹影入帘。"}, {"kind": "note", "text": "帘前见竹影。"}]},
+    {"kind": "commentary", "text": "记其读书之所。"}
+  ],
+  "annotations": [
+    {"block": 1, "inline": 0, "offset": 0, "placement": "top", "columns": 2, "flow": true, "text": "此处从窗景落笔"}
+  ]
+}

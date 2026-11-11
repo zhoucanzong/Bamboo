@@ -54,7 +54,7 @@ Word 保留可编辑正文与批注文字框。密集朱批按导出时的页内
 需要 **Python 3.9 或更新版本**。
 
 ```sh
-git clone https://github.com/zhoucanzong/Bamboo.git
+git clone --branch skill https://github.com/zhoucanzong/Bamboo.git
 cd Bamboo
 
 python -m venv .venv
@@ -174,7 +174,14 @@ PDF 与 HTML 使用同一版面。Word 的最终换行和分页由阅读器计�
 
 ## MCP 服务与 Skill
 
-简牍提供本地 MCP 服务。客户端可以查看版式、创建和编辑原稿、检查分页与字体，导出 PDF、HTML 及流式 Word。安装可选依赖后，用 `bamboo mcp --workspace <目录>` 启动。详见[客户端配置与调用示例](docs/mcp.md)。面向智能助手的排版 Skill 单独维护在 [skill 分支](https://github.com/zhoucanzong/Bamboo/tree/skill)。
+简牍提供本地 MCP 服务。客户端可以查看版式、创建和编辑原稿、检查分页与字体，导出 PDF、HTML 及流式 Word。安装可选依赖后，用 `bamboo mcp --workspace <目录>` 启动。详见[客户端配置与调用示例](docs/mcp.md)。
+
+本分支包含 [bamboo-typeset 排版 Skill](.agents/skills/bamboo-typeset/SKILL.md)。在支持仓库 Skill 的客户端打开此项目后即可调用；也可将整个 `.agents/skills/bamboo-typeset` 文件夹复制到其他项目的技能目录。选用一种执行方式：
+
+- 已配置 MCP：Skill 直接使用简牍工具，读取或修改指定原稿。
+- 使用本机命令行：先依照“快速开始”安装引擎，在能运行 `python -m bamboo` 的环境使用 Skill，无需启动 MCP。
+
+例如：**用 $bamboo-typeset 把这段原文排成右起竖排，保留小字双行夹注，给我 PDF 和可继续编辑的 Word。**
 
 ## 文档
 

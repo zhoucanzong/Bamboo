@@ -1,0 +1,4 @@
+interface:
+  display_name: "简牍排版"
+  short_description: "用简牍排印横竖古籍、双行夹注和朱批，导出可编辑文稿与定版书页"
+  default_prompt: "用 $bamboo-typeset 将这段原文排成带双行夹注的竖排书页，导出 PDF 和可编辑 Word。"
